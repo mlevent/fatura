@@ -9,7 +9,7 @@ Bu paket GİB'e tabi şahıs şirketi ya da şirket hesapları ile çalışır v
 
 > Kullanıcı kodu ve parola bilgilerini muhasebecinizden ya da GİB - İnteraktif Vergi Dairesi'nden edinebilirsiniz.
 
-![Fatura](https://i.imgur.com/rO5irLk.png)
+![Fatura](https://i.imgur.com/TFOAaKW.png)
 
 ## Kurulum
 
@@ -160,7 +160,7 @@ $invoice = InvoiceModel::new(
 
 // Ürün/Hizmetler
 $invoice->addItem(
-    InvoiceItem::new(
+    InvoiceItemModel::new(
         malHizmet   : 'Çimento',
         miktar      : 3,
         birim       : Unit::Ton,
@@ -217,7 +217,7 @@ $invoice = InvoiceModel::new(
 
 // Ürün/Hizmetler
 $invoice->addItem(
-    InvoiceItem::new(
+    InvoiceItemModel::new(
         tevkifatKodu: 613, // 613 - Çevre, Bahçe ve Bakım Hizmetleri [KDVGUT-(I/C-2.1.3.2.11)]
         ...
     )
@@ -252,7 +252,7 @@ $invoice = InvoiceModel::new(
 
 // Ürün/Hizmetler
 $invoice->addItem(
-    InvoiceItem::new(
+    InvoiceItemModel::new(
         gtip: '080810100000',
         ...
     )
@@ -272,7 +272,7 @@ $invoice = InvoiceModel::new(
 
 // Ürün/Hizmetler
 $invoice->addItem(
-    InvoiceItem::new(
+    InvoiceItemModel::new(
         ...
         ozelMatrahNedeni: 805, // 805 - Altından Mamül veya Altın İçeren Ziynet Eşyaları İle Sikke Altınların Teslimi
         ozelMatrahTutari: 1250,
