@@ -414,7 +414,7 @@ use Mlevent\Fatura\Models\InvoiceModel;
 $gib = (new Gib)->login('333333054', '******');
 
 $invoice = InvoiceModel::import(
-    $gib->getInvoice('c4e9e0a2-4788-11ed-bbd4-4ccc6ae28384')
+    $gib->getDocument('c4e9e0a2-4788-11ed-bbd4-4ccc6ae28384')
 );
 
 $invoice->aliciAdi    = 'Nureddin';
