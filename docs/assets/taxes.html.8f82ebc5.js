@@ -1,0 +1,1 @@
+const e=JSON.parse('{"key":"v-06a49a99","path":"/taxes.html","title":"💸 Vergilendirme","lang":"en-US","frontmatter":{"title":"💸 Vergilendirme"},"excerpt":"","headers":[{"level":2,"title":"Vergi Ekleme","slug":"vergi-ekleme","link":"#vergi-ekleme","children":[]}],"git":{"updatedTime":null,"contributors":[]},"filePathRelative":"taxes.md"}');export{e as data};

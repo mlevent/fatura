@@ -1,0 +1,684 @@
+# 🧾 Fatura
+
+GİB e-Arşiv portal üzerinde; e-Fatura, e-SMM, e-Müstahsil oluşturma, düzenleme, imzalama vb. işlemlere olanak tanır.
+
+Bu paket GİB'e tabi şahıs şirketi ya da şirket hesapları ile çalışır ve bu kişiler adına resmi fatura/makbuz oluşturur. GİB e-Arşiv portala tarayıcınızdan giriş yapmak için aşağıdaki linkleri kullanabilirsiniz;
+
+-   https://earsivportaltest.efatura.gov.tr/login.jsp
+-   https://earsivportal.efatura.gov.tr/intragiris.html
+
+> Kullanıcı kodu ve parola bilgilerini muhasebecinizden ya da GİB - İnteraktif Vergi Dairesi'nden edinebilirsiniz.
+
+![Fatura](https://i.imgur.com/rO5irLk.png)
+
+## Kurulum
+
+🛠️ Paketi composer ile projenize dahil edin;
+
+```bash
+composer require mlevent/fatura
+```
+
+## 🎉 Özellikler
+
+-   [Api Bağlantısı](#api-bağlantısı)
+-   [Belge Oluşturma](#belge-oluşturma)
+    -   [e-Fatura](#e-fatura)
+        -   [Satış](#satış)
+        -   [İade](#i̇ade)
+        -   [Tevkifat](#tevkifat)
+        -   [İstisna](#i̇stisna)
+        -   [Özel Matrah](#özel-matrah)
+    -   [e-Müstahsil](#e-müstahsil)
+    -   [e-SMM](#e-smm)
+-   [Belge Güncelleme](#belge-günceleme)
+-   [Belge Silme](#belge-silme)
+-   [Belge İmzalama](#belge-i̇mzalama)
+    -   [Sms ile İmzalama](#sms-ile-i̇mzalama)
+-   [Belge Listeleme](#belge-listeleme)
+    -   [Düzenlenen Belgeler](#düzenlenen-belgeler)
+    -   [Adıma Düzenlenen Belgeler](#adıma-düzenlenen-belgeler)
+    -   [Belge Detayları](#belge-detayları)
+    -   [HTML Çıktı Alma](#html-çıktı-alma)
+    -   [Belge İndirme Adresi](#belge-indirme-adresi)
+-   [GİB Profil Bilgileri](#gi̇b-profil-bilgileri)
+-   [Mükellef Sorgulama](#mükellef-bilgileri)
+-   [Birimler](#birimler)
+
+## 🔗Api Bağlantısı
+
+### Test Kullanıcısı
+
+e-Arşiv portal üzerinden yeni bir test kullanıcısı oluşturmak ve token almak için;
+
+```php
+use Mlevent\Fatura\Gib;
+
+$gib = new Gib;
+
+$gib->setTestCredentials()
+    ->login();
+
+echo $gib->getToken();
+```
+
+Token ve kullanıcı bilgilerine ulaşmak için;
+
+```php
+print_r($gib->getToken());
+print_r($gib->getCredentials());
+```
+
+### Gerçek Kullanıcı
+
+e-Arşiv portal kullanıcı bilgilerinizi `setCredentials` metodunu kullanarak tanımlayabilirsiniz.
+
+```php
+use Mlevent\Fatura\Gib;
+
+$gib = new Gib;
+
+$gib->setCredentials('Kullanıcı Kodu', 'Parola')
+    ->login();
+
+echo $gib->getToken();
+```
+
+Bilgilerinizi doğrudan `login` metoduyla da tanımlayabilirsiniz.
+
+```php
+$gib->login('Kullanıcı Kodu', 'Parola')
+```
+
+> Not: Token değerini herhangi bir yerde kullanmanız gerekmeyecek.
+
+### Oturum Sonlandırma
+
+Herhangi bir kısıtlama veya oturum sorunu yaşamamak adına, işlemlerden sonra oturumu sonlandırabilir ya da `setToken` yöntemini kullanabilirsiniz.
+
+```php
+$gib->logout();
+```
+
+Bir kez token aldıktan sonra token süresi sonlanana kadar login/logout olmadan da işlem yapılabilir.
+
+```php
+$gib->setToken('f72b59eac1366d3115d80fa9dc971fc05daa7aaeea2c4715efce537c6d052e0cf0cdcd28db2f5928bf35d9590f6143f8e58bda5a5fb15ab67964905a4363daf0');
+```
+
+> Token süresi sonlandığında yeni token alınmalıdır.
+
+## 📃Belge Oluşturma
+
+Model kullanırken named arguments (adlandırılmış değişkenler) veya dizilerle çalışabilirsiniz. Oluşturulan belgeler, daha sonra imzalanmak üzere e-Arşiv portalda taslaklara kaydedilir.
+
+> `faturaUuid` ve `belgeNumarasi` belirtildiyse; portalda bu bilgilerle eşleşen belge güncellenir, diğer durumda portal üzerinde yeni bir belge oluşturulur. [Belge Güncelleme](#belge-günceleme) sayfasını kontrol edin.
+
+## e-Fatura
+
+Kütüphaneyi kullanarak aşağıdaki fatura türleri ile çalışabilirsiniz;
+
+-   Satış
+-   İade
+-   Tevkifat
+-   İstisna
+-   Özel Matrah
+
+> Döviz cinsinden fatura düzenlemek için modelde `paraBirimi` ve `dovizKuru` parametreleri kullanılmalıdır.
+
+### Satış
+
+Satış faturası oluşturabilmek için, **faturaTipi** `InvoiceType::Satis` gönderilmelidir.
+
+```php
+use Mlevent\Fatura\Enums\Currency;
+use Mlevent\Fatura\Enums\InvoiceType;
+use Mlevent\Fatura\Enums\Tax;
+use Mlevent\Fatura\Enums\Unit;
+use Mlevent\Fatura\Gib;
+use Mlevent\Fatura\Models\InvoiceModel;
+use Mlevent\Fatura\Models\InvoiceItemModel;
+
+// Fatura detayları
+$invoice = InvoiceModel::new(
+    //uuid'         : '04e17398-468d-11ed-b3cb-4ccc6ae28384',
+    //belgeNumarasi': 'GIB2022000000003',
+    tarih           : '20/10/2022',
+    saat            : '23:50:48',
+    paraBirimi      : Currency::USD,
+    dovizKuru       : 18.56,
+    faturaTipi      : InvoiceType::Satis,
+    vknTckn         : '11111111111',
+    aliciUnvan      : 'BISHOPOĞLU İNŞAAT MALZEMELERİ SAN. TİC. LTD. ŞTİ.',
+    vergiDairesi    : 'Nilüfer Vd.',
+    aliciAdi        : 'Walter',
+    aliciSoyadi     : 'Bishopoğlu',
+    mahalleSemtIlce : 'Nilüfer',
+    sehir           : 'Bursa',
+    ulke            : 'Türkiye',
+);
+
+// Ürün/Hizmetler
+$invoice->addItem(
+    InvoiceItem::new(
+        malHizmet   : 'Çimento',
+        miktar      : 3,
+        birim       : Unit::Ton,
+        birimFiyat  : 1259,
+        kdvOrani    : 18,
+        iskontoOrani: 25,
+    )->addTax(Tax::ElkHavagazTuketim, 10) // %10 Elektrik Havagaz Tüketim Vergisi
+     ->addTax(Tax::Damga,             15) // %15 Damga Vergisi
+     ->addTax(Tax::GVStopaj,          20) // %20 Gelir Vergisi Stopajı
+);
+
+$gib = (new Gib)->login('333333054', '******');
+
+if ($gib->createDraft($invoice)) {
+    echo $invoice->getUuid(); // 04e17398-468d-11ed-b3cb-4ccc6ae28384
+}
+
+$gib->logout();
+```
+
+### İade
+
+İade faturası oluşturabilmek için, **faturaTipi** `InvoiceType::Iade` gönderilmeli; iadeye konu faturalar **addReturnItem** metoduyla faturaya eklenmelidir.
+
+```php
+// Fatura detayları
+$invoice = new InvoiceModel(
+    faturaTipi: InvoiceType::Iade,
+    ...
+);
+
+// İade faturası için iadeye konu faturalar
+$invoice->addReturnItem(
+    new InvoiceReturnItemModel(
+        faturaNo        : 'GIB2022000001416',
+        duzenlenmeTarihi: '31/12/2022'
+    )
+);
+
+// Ürün/Hizmetler
+$invoice->addItem(...);
+```
+
+### Tevkifat
+
+Tevkifatlı fatura oluşturabilmek için, **faturaTipi** `InvoiceType::Tevkifat` gönderilmelidir.
+
+```php
+// Fatura detayları
+$invoice = InvoiceModel::new(
+    faturaTipi: InvoiceType::Tevkifat,
+    ...
+);
+
+// Ürün/Hizmetler
+$invoice->addItem(
+    InvoiceItem::new(
+        tevkifatKodu: 613, // 613 - Çevre, Bahçe ve Bakım Hizmetleri [KDVGUT-(I/C-2.1.3.2.11)]
+        ...
+    )
+);
+```
+
+Tevkifat kodlarına ait liste çıktısını almak için;
+
+```php
+print_r(Tax::KDVTevkifat->codes());
+
+Array
+(
+    [601] => Array
+        (
+            [rate] => 40
+            [name] => Yapım İşleri ile Bu İşlerle Birlikte İfa Edilen Mühendislik-Mimarlık ve Etüt-Proje Hizmetleri [KDVGUT-(I/C-2.1.3.2.1)]
+        )
+    ...
+```
+
+### İstisna
+
+İstisna fatura oluşturabilmek için, **faturaTipi** `InvoiceType::Istisna` gönderilmeli; 12 haneli **gtip** kodu faturaya ait ürün/hizmet eklenirken belirtilebilir.
+
+```php
+// Fatura detayları
+$invoice = InvoiceModel::new(
+    faturaTipi: InvoiceType::Istisna,
+    ...
+);
+
+// Ürün/Hizmetler
+$invoice->addItem(
+    InvoiceItem::new(
+        gtip: '080810100000',
+        ...
+    )
+);
+```
+
+### Özel Matrah
+
+Özel matrah fatura oluşturabilmek için, **faturaTipi** `InvoiceType::OzelMatrah` gönderilmeli; faturaya ait ürün/hizmet eklenirken **ozelMatrahNedeni** ve **ozelMatrahTutari** belirtilmelidir.
+
+```php
+// Fatura detayları
+$invoice = InvoiceModel::new(
+    faturaTipi: InvoiceType::OzelMatrah,
+    ...
+);
+
+// Ürün/Hizmetler
+$invoice->addItem(
+    InvoiceItem::new(
+        ...
+        ozelMatrahNedeni: 805, // 805 - Altından Mamül veya Altın İçeren Ziynet Eşyaları İle Sikke Altınların Teslimi
+        ozelMatrahTutari: 1250,
+    )
+);
+```
+
+Özel matrah nedenlerine ait liste çıktısını almak için;
+
+```php
+print_r(InvoiceType::OzelMatrah->reasons());
+
+Array
+(
+    [801] => Milli Piyango, Spor Toto vb. Oyunlar
+    [802] => At yarışları ve diğer müşterek bahis ve talih oyunları
+    [803] => Profesyonel Sanatçıların Yer Aldığı Gösteriler, Konserler, Profesyonel Sporcuların Katıldığı Sportif Faaliyetler, Maçlar, Yarışlar ve Yarışmalar
+    ...
+)
+```
+
+## e-Müstahsil
+
+Müstahsil makbuzu ile çalışılacaksa, Gib sınıfı başlatılırken `DocumentType::ProducerReceipt` başlangıç parametresi olarak gönderilmelidir.
+
+```php
+use Mlevent\Fatura\Enums\Tax;
+use Mlevent\Fatura\Enums\Unit;
+use Mlevent\Fatura\Gib;
+use Mlevent\Fatura\Models\ProducerReceiptModel;
+use Mlevent\Fatura\Models\ProducerReceiptItemModel;
+
+// Müstahsil Makbuzu Detayları
+$producerReceipt = ProducerReceiptModel::new(
+    tarih       : '20/10/2022',  // ☑️ Opsiyonel @string @default=(dd/mm/yyyy)
+    saat        : '23:50:48',    // ☑️ Opsiyonel @string @default=(hh/mm/ss)
+    vknTckn     : '11111111111', // ✴️ Zorunlu   @string
+    aliciAdi    : 'Walter',      // ✴️ Zorunlu   @string
+    aliciSoyadi : 'Bishop',      // ✴️ Zorunlu   @string
+    sehir       : '',            // ✅ Opsiyonel @string
+    websitesi   : '',            // ✅ Opsiyonel @string
+    not         : '',            // ✅ Opsiyonel @string
+    teslimTarihi: '',            // ✅ Opsiyonel @string
+);
+
+// Ürün/Hizmetler
+$producerReceipt->addItem(
+    ProducerReceiptItemModel::new(
+        malHizmet    : 'Yazılım Hizmeti', // ✴️ Zorunlu @string
+        miktar       : 3,                 // ✴️ Zorunlu @float
+        birim        : Unit::Saat,        // ✴️ Zorunlu @Unit
+        birimFiyat   : 100,               // ✴️ Zorunlu @float
+        gvStopajOrani: 20                 // ✴️ Zorunlu @int
+    )
+);
+
+$service = (new Gib(DocumentType::ProducerReceipt))->login('333333054', '******');
+
+if ($service->createDraft($producerReceipt)) {
+    echo $producerReceipt->getUuid(); // 04e17398-468d-11ed-b3cb-4ccc6ae28384
+}
+
+$service->logout();
+```
+
+## e-SMM
+
+Serbest meslek makbuzu ile çalışılacaksa, Gib sınıfı başlatılırken `DocumentType::SelfEmployedReceipt` başlangıç parametresi olarak gönderilmelidir.
+
+```php
+use Mlevent\Fatura\Enums\Tax;
+use Mlevent\Fatura\Enums\Unit;
+use Mlevent\Fatura\Gib;
+use Mlevent\Fatura\Models\SelfEmployedReceiptModel;
+use Mlevent\Fatura\Models\SelfEmployedReceiptItemModel;
+
+// Serbest Meslek Makbuzu
+$selfEmployedReceipt = SelfEmployedReceiptModel::new(
+    tarih          : '20/10/2022',  // ☑️ Opsiyonel @string   @default=(dd/mm/yyyy)
+    saat           : '14:25:34',    // ☑️ Opsiyonel @string   @default=(hh/mm/ss)
+    paraBirimi     : Currency::USD, // ☑️ Opsiyonel @Currency @default=Currency::TRY
+    dovizKuru      : 18.56,         // ☑️ Opsiyonel @float    @default=0
+    vknTckn        : '11111111111', // ✴️ Zorunlu   @string
+    aliciAdi       : 'Walter',      // ✴️ Zorunlu   @string
+    aliciSoyadi    : 'Bishop',      // ✴️ Zorunlu   @string
+    aliciUnvan     : '',            // ✅ Opsiyonel @string
+    adres          : '',            // ✅ Opsiyonel @string
+    binaAdi        : '',            // ✅ Opsiyonel @string
+    binaNo         : '',            // ✅ Opsiyonel @string
+    kapiNo         : '',            // ✅ Opsiyonel @string
+    kasabaKoy      : '',            // ✅ Opsiyonel @string
+    mahalleSemtIlce: '',            // ✅ Opsiyonel @string
+    sehir          : '',            // ✅ Opsiyonel @string
+    postaKodu      : '',            // ✅ Opsiyonel @string
+    ulke           : 'Türkiye',     // ✴️ Zorunlu   @string
+    vergiDairesi   : '',            // ✅ Opsiyonel @string
+    aciklama       : '',            // ✅ Opsiyonel @string
+    kdvTahakkukIcin: false,         // ☑️ Opsiyonel @boolean  @default=false
+);
+
+$selfEmployedReceipt->addItem(
+    SelfEmployedReceiptItemModel::new(
+        neIcinAlindigi  : 'Dava Vekilliği', // ✴️ Zorunlu   @string
+        brutUcret       : 100,              // ✴️ Zorunlu   @float
+        kdvOrani        : 18,               // ✴️ Zorunlu   @int
+        gvStopajOrani   : 0,                // ✅ Opsiyonel @int
+        kdvTevkifatOrani: 0,                // ✅ Opsiyonel @int
+    )
+);
+
+$service = (new Gib(DocumentType::SelfEmployedReceipt))->login('333333054', '******');
+
+if ($service->createDraft($producerReceipt)) {
+    echo $producerReceipt->getUuid(); // 04e17398-468d-11ed-b3cb-4ccc6ae28384
+}
+
+$service->logout();
+```
+
+## Belge Günceleme
+
+Fatura oluşturulurken `faturaUuid` ve `belgeNumarasi` belirtildiyse; portalda bu bilgilerle eşleşen belge güncellenir, diğer durumda portal üzerinde yeni bir belge oluşturulur.
+
+```php
+// Fatura detayları
+$invoice = InvoiceModel::new(
+    uuid          : '04e17398-468d-11ed-b3cb-4ccc6ae28384',
+    belgeNumarasi : 'GIB2022000000003',
+    ...
+);
+```
+
+Belgeleri güncellemek için bir diğer yöntem; önce düzenlenecek belgeyi getirmek ve daha sonra düzenlenecek alanlarla birlikte güncelleme isteği göndermektir. Örneğin oluşturulan faturada yalnızca alıcı bilgilerini güncellemek isteyebilirsiniz;
+
+```php
+use Mlevent\Fatura\Gib;
+use Mlevent\Fatura\Models\InvoiceModel;
+
+$gib = (new Gib)->login('333333054', '******');
+
+$invoice = InvoiceModel::import(
+    $gib->getInvoice('c4e9e0a2-4788-11ed-bbd4-4ccc6ae28384')
+);
+
+$invoice->aliciAdi    = 'Nureddin';
+$invoice->aliciSoyadi = 'Nebati';
+$invoice->adres       = 'Bankalar Cd. Faiz Sk. No:128/A';
+
+// Güncellenecek faturaya yeni öğe eklenirse, içe aktarılmış öğeler silinir
+$invoice->addItem(...);
+
+// Faturayı güncelle
+if ($gib->createDraft($invoice)) {
+    echo $invoice->getUuid(); // c4e9e0a2-4788-11ed-bbd4-4ccc6ae28384
+}
+```
+
+> `addItem` metodunun kullanılması durumunda içe aktarılmış öğeler silinecektir.
+
+## Belge Silme
+
+Taslak belgeleri silmek için `deleteDraft` metodu kullanılmalıdır. Metod bir dizi kabul eder. Gönderilecek dizi içerisinde silinecek belge veya belgelere ait `uuid` bilgisi bulunması gerekir.
+
+Aşağıdaki örnek, bilinen bir tarih aralığındaki tüm taslak belgeleri siler.
+
+```php
+$fetchToDelete = $gib->selectColumn(['ettn'])
+                     ->onlyUnsigned()
+                     ->getAll('10/10/2022', '10/15/2022');
+
+if ($gib->deleteDraft($fetchToDelete)) {
+    echo "{$gib->rowCount()} adet belge silindi!"; // x adet belge silindi
+}
+```
+
+Belirsiz bir tarih aralığındaki taslak belgeler silinmek isteniyorsa;
+
+```php
+$setToDelete = [
+    '90559052-8bd0-4f68-a733-12157cf53cfb',
+    '521ce2b1-290c-45fa-8312-d455672289ef',
+];
+
+if ($gib->deleteDraft($setToDelete)) {
+    echo "{$gib->rowCount()} adet belge silindi!"; // 2 adet belge silindi
+}
+```
+
+## Belge İmzalama
+
+☢️ Belge imzalama, faturanın/makbuzun kesilmesi işlemidir ve vergi sisteminde mali veri oluşturur. Belge imzalandıktan sonra üzerinde değişiklik yapılamaz ve silinemez. Bu nedenle dikkatli kullanınız.
+
+### 📲SMS ile İmzalama
+
+SMS doğrulamasına başlamak için `startSmsVerification` yöntemi kullanılmalıdır. Yöntem portalda kayıtlı gsm numarasına bir doğrulama kodu gönderecek ve imzalama işlemi için daha sonra kullanacağınız bir ID döndürecektir.
+
+```php
+$operationId = $gib->startSmsVerification();
+```
+
+Doğrulama işlemini tamamlamak için kullanılacak `completeSmsVerification` yöntemine; SMS ile gelen doğrulama kodu, SMS doğrulaması başlatılırken alınan Operasyon ID'si ve onaylanacak belgelere ait UUID değerlerinin bulunduğu bir dizi olmak üzere 3 farklı parametre gönderilmelidir.
+
+```php
+// Portaldan belirli bir tarih aralığındaki tüm onaysız belgeleri getir
+$setToSign = $gib->selectColumn(['ettn'])
+                 ->onlyUnsigned()
+                 ->getAll('01/10/2022', '15/10/2022');
+
+// Onaylanacak belgelere ait UUID'leri kendiniz de belirtebilirsiniz
+$setToSign = [
+    '2e989428-63ca-11ed-b617-4ccc6ae28384',
+    '54c5df01-038b-4e01-973d-cd31e4a547f3',
+];
+
+// Belgeleri onayla
+if ($gib->completeSmsVerification($smsCode, $operationId, $setToSign)) {
+    echo "{$gib->rowCount()} adet belge onaylandı!"; // x adet belge onaylandı
+}
+```
+
+## Belge Listeleme
+
+Oluşturulan taslak belgeleri, tarih aralığı belirtmek koşuluyla farklı şekillerde listeleyebilirsiniz.
+
+### Düzenlenen Belgeler
+
+```php
+$documents = $gib->getAll('01/09/2022', '15/09/2022');
+```
+
+Bu örnek, aşağıdaki şu diziyi döndürecektir;
+
+```php
+Array
+(
+    [0] => Array
+        (
+            [belgeNumarasi] => GIB2022000000356
+            [aliciVknTckn] => 11111111111
+            [aliciUnvanAdSoyad] => Mert Levent
+            [belgeTarihi] => 09-10-2022
+            [belgeTuru] => FATURA
+            [onayDurumu] => Onaylanmadı
+            [ettn] => c4e9e0a2-4788-11ed-bbd4-4ccc6ae28384
+        )
+    ...
+)
+```
+
+### Adıma Düzenlenen Belgeler
+
+İki tarih arasındaki gelen faturaları (GİB portaldaki adıyla Adıma Düzenlenen Belgeler) listeler.
+
+```php
+$documents = $gib->getAllIssuedToMe('01/09/2022', '15/09/2022');
+```
+
+### Belge Detayları
+
+Portal üzerinde kayıtlı belge detaylarına ulaşmak için;
+
+```php
+$gib->getDocument('6115993e-3e77-473c-8ea5-c24036b4106c');
+```
+
+### HTML Çıktı Alma
+
+Portal üzerinde kayıtlı belgeye ait HTML çıktıya ulaşmak için;
+
+```php
+$gib->getHtml('1d78ef40-6491-11ed-a280-4ccc6ae28384');
+```
+
+### Belge İndirme Adresi
+
+Portal üzerinde kayıtlı belgeye ait indirme adresine ulaşmak için;
+
+```php
+$gib->getDownloadURL('44ba5b87-81a3-4474-bd0f-27d771fb4064');
+```
+
+## Belge Filtreleme
+
+🔍 Kayıtları zincirleme metodlar kullanarak kolayca filtreleyebilirsiniz.
+
+```php
+$documents = $gib->onlyUnsigned()
+                 ->findRecipientName('mehmet')
+                 ->getAll('01/09/2022', '15/09/2022');
+```
+
+> Alıcı adında `mehmet` ifadesi geçen imzalanmamış kayıtlar döner.
+
+---
+
+### Kullanılabilir Filtreleme Yöntemleri
+
+| Metod                       | Açıklama                                |
+| :-------------------------- | :-------------------------------------- |
+| `onlyInvoice()`             | Faturalar.                              |
+| `onlyProducerReceipt()`     | Müstahsil makbuzları.                   |
+| `onlySelfEmployedReceipt()` | Serbest meslek makbuzları.              |
+| `onlySigned()`              | İmzalanmış belgeler.                    |
+| `onlyUnSigned()`            | İmzalanmamış belgeler.                  |
+| `onlyDeleted()`             | Silinmiş belgeler.                      |
+| `findRecipientName($value)` | Alıcı adına göre filtreleme.            |
+| `findRecipientId($value)`   | Alıcı vergi numarasına göre filtreleme. |
+| `findDocumentId($value)`    | Belge numarasına göre filtreleme.       |
+| `findEttn($value)`          | Uuid numarasına göre filtreleme.        |
+| `setLimit($limit, $offset)` | Sonuçlar için limit belirleme.          |
+| `sortAsc()`                 | Önce ilk kayıtlar.                      |
+| `sortDesc()`                | (Varsayılan) Önce son kayıtlar.         |
+
+## Mükellef Bilgileri
+
+TC Kimlik Numarası ya da Vergi Numarası ile mükellef sorgulamaya yarar. Fatura oluşturma aşamasında vergi numarasının doğruluğunu sorgulamak için kullanılabilir. **Test ortamında sonuç boş döner.**
+
+```php
+$recipientData = $gib->getRecipientData('2920084496');
+```
+
+Bu örnek, aşağıdaki şu diziyi döndürecektir;
+
+```php
+Array
+(
+    [unvan] => DENİZBANK ANONİM ŞİRKETİ
+    [adi] =>
+    [soyadi] =>
+    [vergiDairesi] => Büyük Mükellefler VD. BAŞKANLIĞI
+)
+```
+
+## GİB Profil Bilgileri
+
+Kayıtlı kullanıcı bilgilerine ulaşmak için `getUserData` metodunu kullanabilirsiniz. Sonuç bir dizi şeklinde döner.
+
+```php
+$userData = $gib->getUserData();
+```
+
+Önce portaldan profil bilgilerini okuyup daha sonra modele import ederek yalnızca belirli alanları güncelleyebilirsiniz.
+
+```php
+use Mlevent\Fatura\Gib;
+use Mlevent\Fatura\Models\UserDataModel;
+
+$gib = new Gib;
+
+$gib->setTestCredentials()
+    ->login();
+
+$userData = UserDataModel::import($gib->getUserData());
+
+$userData->apartmanAdi = 'Lale Apartmanı';
+$userData->kapiNo      = '12';
+
+if ($gib->updateUserData($userData)) {
+    // Bilgileriniz başarıyla güncellendi.
+}
+```
+
+## Birimler
+
+[https://www.php.net/manual/en/language.types.enumerations.php](https://www.php.net/manual/en/language.types.enumerations.php) sayfasını kontrol edin.
+
+### Ürün/Hizmet Birimleri
+
+```php
+use Mlevent\Fatura\Enums\Unit;
+
+foreach (Unit::cases() as $unit) {
+    echo $unit->name;    // Dk
+    echo $unit->value;   // D61
+    echo $unit->alias(); // Dakika
+}
+```
+
+### Vergi Birimleri
+
+```php
+use Mlevent\Fatura\Enums\Tax;
+
+foreach (Tax::cases() as $tax) {
+    echo $tax->name;    // BankaMuameleleri
+    echo $tax->value;   // 0021
+    echo $tax->alias(); // Banka Muameleleri Vergisi
+}
+```
+
+### Para Birimleri
+
+```php
+use Mlevent\Fatura\Enums\Currency;
+
+foreach (Currency::cases() as $currency) {
+    echo $currency->name;    // TRY
+    echo $currency->value;   // TRY
+    echo $currency->alias(); // Türk Lirası
+}
+```
+
+## 📧İletişim
+
+İletişim için ghergedan@gmal.com adresine e-posta gönderin.
+
+---
+
+☢️ Bu paket vergiye tabi olan mali veri oluşturur. Bu paket nedeniyle oluşabilecek sorunlardan bu paket sorumlu tutulamaz, risk kullanana aittir. Riskli görüyorsanız kullanmayınız.

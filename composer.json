@@ -1,0 +1,39 @@
+{
+    "name": "mlevent/fatura",
+    "description": "PHP için GİB eArşiv/eFatura entegrasyonu.",
+    "keywords": [
+        "gib",
+        "earşiv",
+        "efatura",
+        "e fatura",
+        "e arşiv",
+        "internet vergi dairesi"
+    ],
+    "homepage": "https://github.com/mlevent/fatura",
+    "license": "MIT",
+    "require": {
+        "php": "^8.1",
+        "guzzlehttp/guzzle": "^7.5",
+        "ramsey/uuid": "^4.5",
+        "kwn/number-to-words": "^2.6"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "9.5"
+    },
+    "autoload": {
+        "files": [
+            "src/Utils/Helpers.php"
+        ],
+        "psr-4": {
+            "Mlevent\\Fatura\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "mlevent",
+            "email": "ghergedan@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
