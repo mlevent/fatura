@@ -44,7 +44,6 @@ class Client
         } catch (\GuzzleHttp\Exception\GuzzleException $e) {
             throw new BadResponseException($e->getMessage(), $parameters, null, $e->getCode());
         }
-        return $this;
     }
 
     /**
