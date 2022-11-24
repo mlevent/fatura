@@ -39,7 +39,7 @@ class Gib
     /**
      * @var boolean
      */
-    protected bool $sortByDesc = true;
+    protected bool $sortByDesc = false;
     
     /**
      * @var integer
@@ -357,7 +357,22 @@ class Gib
         );
         return $response->get('data');
     }
-            
+
+    /**
+     * getLastDocument
+     */
+    public function getLastDocument(): array
+    {
+        $lastDocument = $this->onlyCurrent()
+                             ->setLimit(1)
+                             ->sortDesc()
+                             ->getAll('01/01/2020', curdate('d/m/Y'));
+                             
+        return $lastDocument 
+            ? $this->getDocument($lastDocument[0]['ettn']) 
+            : [];
+    }
+
     /**
      * getHtml
      */
@@ -448,7 +463,7 @@ class Gib
         $this->setRowCount(sizeof($documents));
         $this->setFilters();
 
-        if (!$this->sortByDesc) {
+        if ($this->sortByDesc) {
             $documents = array_reverse($documents);
         }
         if (sizeof($this->limit)) {
@@ -550,11 +565,20 @@ class Gib
     }
 
     /**
+     * onlyCurrent
+     */
+    public function onlyCurrent(): self
+    {
+        $this->setFilters(['belgeTuru' => $this->documentType->value]); 
+        return $this;
+    }
+
+    /**
      * onlyInvoice
      */
     public function onlyInvoice(): self
     {
-        $this->setFilters(['belgeTuru' => 'FATURA']); 
+        $this->setFilters(['belgeTuru' => DocumentType::Invoice->value]); 
         return $this;
     }
 
@@ -563,7 +587,7 @@ class Gib
      */
     public function onlyProducerReceipt(): self
     {
-        $this->setFilters(['belgeTuru' => 'MÜSTAHSİL MAKBUZU']);
+        $this->setFilters(['belgeTuru' => DocumentType::ProducerReceipt->value]);
         return $this;
     }
 
@@ -572,7 +596,7 @@ class Gib
      */
     public function onlySelfEmployedReceipt(): self
     {
-        $this->setFilters(['belgeTuru' => 'SERBEST MESLEK MAKBUZU']);
+        $this->setFilters(['belgeTuru' => DocumentType::SelfEmployedReceipt->value]);
         return $this;
     }
 
