@@ -1,15 +1,25 @@
-# 🧾 Fatura
 
-GİB e-Arşiv portal üzerinde; e-Fatura, e-SMM, e-Müstahsil oluşturma, düzenleme, imzalama vb. işlemlere olanak tanır.
+<h1 align="center">🧾 Fatura</h1>
+<p align="center">GİB e-Arşiv portal üzerinde; e-Fatura, e-SMM, e-Müstahsil oluşturma, düzenleme, imzalama vb. işlemlere olanak tanır.</p>
 
+<p align="center">
+<img src="https://img.shields.io/packagist/v/mlevent/fatura?style=plastic"/>
+<img src="https://img.shields.io/github/license/mlevent/fatura?style=plastic"/>
+<img src="https://img.shields.io/github/issues/mlevent/fatura?style=plastic"/>
+<img src="https://img.shields.io/github/last-commit/mlevent/fatura?style=plastic"/>
+<img src="https://img.shields.io/github/stars/mlevent/fatura?style=plastic"/>
+<img src="https://img.shields.io/github/forks/mlevent/fatura?style=plastic"/>
+</p>
+
+![Fatura](https://i.imgur.com/PsJTtmL.png)
+
+## Nasıl Çalışır?
 Bu paket GİB'e tabi şahıs şirketi ya da şirket hesapları ile çalışır ve bu kişiler adına resmi fatura/makbuz oluşturur. GİB e-Arşiv portala tarayıcınızdan giriş yapmak için aşağıdaki linkleri kullanabilirsiniz;
 
 -   https://earsivportaltest.efatura.gov.tr/login.jsp
 -   https://earsivportal.efatura.gov.tr/intragiris.html
 
 > Kullanıcı kodu ve parola bilgilerini muhasebecinizden ya da GİB - İnteraktif Vergi Dairesi'nden edinebilirsiniz.
-
-![Fatura](https://i.imgur.com/TFOAaKW.png)
 
 ## Kurulum
 
