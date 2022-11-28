@@ -1,4 +1,3 @@
-
 <h1 align="center">🧾 Fatura</h1>
 <p align="center">GİB e-Arşiv portal üzerinde; e-Fatura, e-SMM, e-Müstahsil oluşturma, düzenleme, imzalama vb. işlemlere olanak tanır.</p>
 
@@ -13,13 +12,16 @@
 
 ![Fatura](https://i.imgur.com/PsJTtmL.png)
 
-## Nasıl Çalışır?
+## Başlarken
+
 Bu paket GİB'e tabi şahıs şirketi ya da şirket hesapları ile çalışır ve bu kişiler adına resmi fatura/makbuz oluşturur. GİB e-Arşiv portala tarayıcınızdan giriş yapmak için aşağıdaki linkleri kullanabilirsiniz;
 
 -   https://earsivportaltest.efatura.gov.tr/login.jsp
 -   https://earsivportal.efatura.gov.tr/intragiris.html
 
 > Kullanıcı kodu ve parola bilgilerini muhasebecinizden ya da GİB - İnteraktif Vergi Dairesi'nden edinebilirsiniz.
+
+Fatih Kadir Akın'ın [fatura.js](https://github.com/f/fatura/) paketinden faydalanılmıştır.
 
 ## Kurulum
 
@@ -51,6 +53,10 @@ composer require mlevent/fatura
     -   [Belge Detayları](#belge-detayları)
     -   [HTML Çıktı Alma](#html-çıktı-alma)
     -   [Belge İndirme Adresi](#belge-indirme-adresi)
+-   [Vergiler](#vergi-ekleme)
+    -   [Vergi Ekleme](#vergi-ekleme)
+    -   [Vergi Listesi](#vergi-listesi)
+    -   [Vergiler ve Toplamlar](#vergiler-ve-toplamlar)
 -   [GİB Profil Bilgileri](#gi̇b-profil-bilgileri)
 -   [Mükellef Sorgulama](#mükellef-bilgileri)
 -   [Birimler](#birimler)
@@ -548,6 +554,14 @@ Portal üzerinde kayıtlı belge detaylarına ulaşmak için;
 $gib->getDocument('6115993e-3e77-473c-8ea5-c24036b4106c');
 ```
 
+### Oluşturulan Son Belge
+
+Portal üzerinde en son oluşturulan belgeye ait detaylara ulaşmak için;
+
+```php
+$gib->getLastDocument('6115993e-3e77-473c-8ea5-c24036b4106c');
+```
+
 ### HTML Çıktı Alma
 
 Portal üzerinde kayıtlı belgeye ait HTML çıktıya ulaşmak için;
@@ -596,24 +610,72 @@ $documents = $gib->onlyUnsigned()
 | `sortAsc()`                 | Önce ilk kayıtlar.                      |
 | `sortDesc()`                | (Varsayılan) Önce son kayıtlar.         |
 
-## Mükellef Bilgileri
+## 💸Vergi Ekleme
 
-TC Kimlik Numarası ya da Vergi Numarası ile mükellef sorgulamaya yarar. Fatura oluşturma aşamasında vergi numarasının doğruluğunu sorgulamak için kullanılabilir. **Test ortamında sonuç boş döner.**
+Belgedeki hizmetlere `addTax` metodunu kullanarak vergi ekleyebilirsiniz. Vergiler doğrudan belgeye eklenemez, yalnızca öğe modeli üzerinden her bir öğeye ayrı ayrı eklenebilir.
 
 ```php
-$recipientData = $gib->getRecipientData('2920084496');
+use Mlevent\Fatura\Enums\Tax;
+use Mlevent\Fatura\Models\InvoiceItemModel;
+
+$invoiceItem = new InvoiceItemModel(
+    malHizmet  : 'Çimento',
+    birim      : Unit::Ton,
+    miktar     : 3,
+    birimFiyat : 1259,
+    kdvOrani   : 18,
+);
+
+// Hizmete vergi ekleme
+$invoiceItem->addTax(Tax::Damga,    15)  // %15 damga vergisi
+            ->addTax(Tax::GVStopaj, 25); // %25 gelir vergisi
+
+// Vergi kodu kullanarak vergi ekleme
+$invoiceItem->addTax(Tax::from(1047), 15); // %15 damga vergisi
 ```
 
-Bu örnek, aşağıdaki şu diziyi döndürecektir;
+### Vergi Listesi
+
+Vergi listesine ulaşmak için `cases` statik metodunu kullanabilirsiniz;
 
 ```php
-Array
-(
-    [unvan] => DENİZBANK ANONİM ŞİRKETİ
-    [adi] =>
-    [soyadi] =>
-    [vergiDairesi] => Büyük Mükellefler VD. BAŞKANLIĞI
-)
+use Mlevent\Fatura\Enums\Tax;
+
+// Vergiler
+foreach (Tax::cases() as $tax) {
+    echo $tax->value;   // 4071
+    echo $tax->name;    // ElkHavagazTuketim
+    echo $tax->alias(); // Elektrik Havagaz Tüketim Vergisi
+}
+```
+
+### Vergiler ve Toplamlar
+
+Belgeye eklenen öğelere ulaşmak için `getItems` metodunu kullanabilirsiniz;
+
+```php
+use Mlevent\Fatura\Models\InvoiceModel;
+use Mlevent\Fatura\Models\InvoiceItemModel;
+
+$invoice = new InvoiceModel(...);
+
+$invoice->addItem(
+    new InvoiceItemModel(...),
+    new InvoiceItemModel(...),
+);
+
+// Her bir öğeye ait vergiler
+foreach ($invoice->getItems() as $item) {
+    print_r($item->getTaxes());       // Öğeye eklenen vergiler
+    print_r($item->totalTaxAmount()); // Öğeye eklenen vergiler toplamı
+    print_r($item->totalTaxVat());    // Öğeye eklenen vergilere ait kdv toplamı
+}
+
+// Belgeye ait vergiler
+print_r($invoice->getTaxes());
+
+// Belgeye ait toplamlar
+print_r($invoice->getTotals());
 ```
 
 ## GİB Profil Bilgileri
@@ -643,6 +705,26 @@ $userData->kapiNo      = '12';
 if ($gib->updateUserData($userData)) {
     // Bilgileriniz başarıyla güncellendi.
 }
+```
+
+## Mükellef Sorgulama
+
+TC Kimlik Numarası ya da Vergi Numarası ile mükellef sorgulamaya yarar. Fatura oluşturma aşamasında vergi numarasının doğruluğunu sorgulamak için kullanılabilir. **Test ortamında sonuç boş döner.**
+
+```php
+$recipientData = $gib->getRecipientData('2920084496');
+```
+
+Bu örnek, aşağıdaki şu diziyi döndürecektir;
+
+```php
+Array
+(
+    [unvan] => DENİZBANK ANONİM ŞİRKETİ
+    [adi] =>
+    [soyadi] =>
+    [vergiDairesi] => Büyük Mükellefler VD. BAŞKANLIĞI
+)
 ```
 
 ## Birimler
