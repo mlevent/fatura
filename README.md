@@ -11,7 +11,7 @@
 <img src="https://img.shields.io/github/forks/mlevent/fatura?style=plastic"/>
 </p>
 
-![Fatura](https://i.imgur.com/692Q1tP.png)
+![Fatura](https://i.imgur.com/PsJTtmL.png)
 
 ## Nasıl Çalışır?
 Bu paket GİB'e tabi şahıs şirketi ya da şirket hesapları ile çalışır ve bu kişiler adına resmi fatura/makbuz oluşturur. GİB e-Arşiv portala tarayıcınızdan giriş yapmak için aşağıdaki linkleri kullanabilirsiniz;
