@@ -34,6 +34,9 @@
             "email": "ghergedan@gmail.com"
         }
     ],
+    "scripts": {
+        "test": "phpunit --debug"
+    },
     "minimum-stability": "dev",
     "prefer-stable": true
 }
