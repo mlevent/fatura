@@ -10,52 +10,54 @@ use Mlevent\Fatura\Models\InvoiceModel;
 
 try {
 
-    //die();
+    $invoiceDetails = [
+        'faturaTipi'      => InvoiceType::Satis,
+        'paraBirimi'      => Currency::TRY,
+        'tarih'           => date('d/m/Y'),
+        'saat'            => date('H:m:s'),
+        'vknTckn'         => '11111111111',
+        'vergiDairesi'    => 'Çekirge VD',
+        'aliciUnvan'      => 'Levent İnşaat Malzemeleri San. Tic. Ltd. Şti.',
+        'aliciAdi'        => 'Mert',
+        'aliciSoyadi'     => 'Levent',
+        'adres'           => 'İzmir Yolu Cd. No:212/B',
+        'mahalleSemtIlce' => 'Nilüfer',
+        'sehir'           => 'Bursa',
+        'ulke'            => 'Türkiye',
+    ];
     
-    $invoice = InvoiceModel::new(
-        faturaTipi      : InvoiceType::Satis,
-        paraBirimi      : Currency::TRY,
-        tarih           : date('d/m/Y'),
-        saat            : date('H:m:s'),
-        vknTckn         : '11111111111',
-        vergiDairesi    : 'Çekirge VD',
-        aliciUnvan      : 'Levent İnşaat Malzemeleri San. Tic. Ltd. Şti.',
-        aliciAdi        : 'Mert',
-        aliciSoyadi     : 'Levent',
-        adres           : 'İzmir Yolu Cd. No:212/B',
-        mahalleSemtIlce : 'Nilüfer',
-        sehir           : 'Bursa',
-        ulke            : 'Türkiye',
-        not             : '33 milyon karşılığında alındı',
-    );
+    $invoiceItems = [
+        [
+            'malHizmet'  => 'Muhtelif Oyuncak',
+            'birim'      => Unit::Adet,
+            'birimFiyat' => 124.52,
+            'miktar'     => 1,
+            'kdvOrani'   => 18,
+        ],
+        [
+            'malHizmet'  => 'Muhtelif Kırtasiye',
+            'birim'      => Unit::Adet,
+            'birimFiyat' => 17.56,
+            'miktar'     => 3,
+            'kdvOrani'   => 8,
+        ]
+    ];
 
-    $invoice->addItem(
-        InvoiceItemModel::new(
-            malHizmet  : 'Muhtelif Oyuncak',
-            miktar     : 1,
-            birim      : Unit::Adet,
-            birimFiyat : 124.52,
-            kdvOrani   : 18,
-        )
-    );
+    $invoice = InvoiceModel::new($invoiceDetails);
 
-    $invoice->addItem(
-        InvoiceItemModel::new(
-            malHizmet  : 'Muhtelif Kırtasiye',
-            miktar     : 3,
-            birim      : Unit::Adet,
-            birimFiyat : 17.56,
-            kdvOrani   : 8,
-        )
-    );
+    $invoice->addItem(...array_map(
+        fn ($item) => InvoiceItemModel::new($item), 
+    $invoiceItems));
 
     $gib = (new Gib())
             ->setTestCredentials('33333310', '1')
             ->login();
 
-    if ($gib->createDraft($invoice->export())) {
+    if ($gib->createDraft($invoice)) {
         echo $invoice->getUuid();
     }
+
+    dd($invoice->getTotals());
 
 } catch(FaturaException $e){
     
