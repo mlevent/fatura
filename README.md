@@ -559,7 +559,7 @@ $gib->getDocument('6115993e-3e77-473c-8ea5-c24036b4106c');
 Portal üzerinde en son oluşturulan belgeye ait detaylara ulaşmak için;
 
 ```php
-$gib->getLastDocument('6115993e-3e77-473c-8ea5-c24036b4106c');
+$gib->getLastDocument();
 ```
 
 ### HTML Çıktı Alma
