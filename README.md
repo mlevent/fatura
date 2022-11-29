@@ -667,6 +667,7 @@ $invoice->addItem(
 // Her bir öğeye ait vergiler
 foreach ($invoice->getItems() as $item) {
     print_r($item->getTaxes());       // Öğeye eklenen vergiler
+    print_r($item->getTotals());      // Öğeye ait toplamlar
     print_r($item->totalTaxAmount()); // Öğeye eklenen vergiler toplamı
     print_r($item->totalTaxVat());    // Öğeye eklenen vergilere ait kdv toplamı
 }
