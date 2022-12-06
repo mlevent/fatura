@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Mlevent\Fatura\Traits;
 
-use Mlevent\Fatura\Contracts\ModelInterface;
-
 trait NewableTrait
 {    
     /**
