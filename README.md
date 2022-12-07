@@ -31,38 +31,11 @@ Fatih Kadir Akın'ın [fatura.js](https://github.com/f/fatura/) paketinden fayda
 composer require mlevent/fatura
 ```
 
-## 🎉 Özellikler
+## Özellikler
 
--   [Api Bağlantısı](#api-bağlantısı)
--   [Belge Oluşturma](#belge-oluşturma)
-    -   [e-Fatura](#e-fatura)
-        -   [Satış](#satış)
-        -   [İade](#i̇ade)
-        -   [Tevkifat](#tevkifat)
-        -   [İstisna](#i̇stisna)
-        -   [Özel Matrah](#özel-matrah)
-    -   [e-Müstahsil](#e-müstahsil)
-    -   [e-SMM](#e-smm)
--   [Belge Güncelleme](#belge-günceleme)
--   [Belge Silme](#belge-silme)
--   [Belge İmzalama](#belge-i̇mzalama)
-    -   [Sms ile İmzalama](#sms-ile-i̇mzalama)
--   [Belge Listeleme](#belge-listeleme)
-    -   [Düzenlenen Belgeler](#düzenlenen-belgeler)
-    -   [Adıma Düzenlenen Belgeler](#adıma-düzenlenen-belgeler)
-    -   [Belge Detayları](#belge-detayları)
-    -   [HTML Çıktı Alma](#html-çıktı-alma)
-    -   [Belge İndirme Adresi](#belge-indirme-adresi)
--   [Vergiler](#vergi-ekleme)
-    -   [Vergi Ekleme](#vergi-ekleme)
-    -   [Vergi Listesi](#vergi-listesi)
-    -   [Vergiler ve Toplamlar](#vergiler-ve-toplamlar)
--   [İptal/İtiraz Talepleri](#iptalitiraz-talepleri)
--   [GİB Profil Bilgileri](#gi̇b-profil-bilgileri)
--   [Mükellef Sorgulama](#mükellef-bilgileri)
--   [Birimler](#birimler)
+[TOC]
 
-## 🔗Api Bağlantısı
+## Api Bağlantısı
 
 ### Test Kullanıcısı
 
@@ -125,7 +98,7 @@ $gib->setToken('f72b59eac1366d3115d80fa9dc971fc05daa7aaeea2c4715efce537c6d052e0c
 
 > Token süresi sonlandığında yeni token alınmalıdır.
 
-## 📃Belge Oluşturma
+## Belge Oluşturma
 
 Model kullanırken named arguments (adlandırılmış değişkenler) veya dizilerle çalışabilirsiniz. Oluşturulan belgeler, daha sonra imzalanmak üzere e-Arşiv portalda taslaklara kaydedilir.
 
@@ -482,7 +455,7 @@ if ($gib->deleteDraft($setToDelete)) {
 
 ☢️ Belge imzalama, faturanın/makbuzun kesilmesi işlemidir ve vergi sisteminde mali veri oluşturur. Belge imzalandıktan sonra üzerinde değişiklik yapılamaz ve silinemez. Bu nedenle dikkatli kullanınız.
 
-### 📲SMS ile İmzalama
+### SMS ile İmzalama
 
 SMS doğrulamasına başlamak için `startSmsVerification` yöntemi kullanılmalıdır. Yöntem portalda kayıtlı gsm numarasına bir doğrulama kodu gönderecek ve imzalama işlemi için daha sonra kullanacağınız bir ID döndürecektir.
 
@@ -611,7 +584,7 @@ $documents = $gib->onlyUnsigned()
 | `sortAsc()`                 | Önce ilk kayıtlar.                      |
 | `sortDesc()`                | (Varsayılan) Önce son kayıtlar.         |
 
-## 💸Vergi Ekleme
+## Vergi Ekleme
 
 Belgedeki hizmetlere `addTax` metodunu kullanarak vergi ekleyebilirsiniz. Vergiler doğrudan belgeye eklenemez, yalnızca öğe modeli üzerinden her bir öğeye ayrı ayrı eklenebilir.
 
@@ -802,7 +775,7 @@ foreach (Currency::cases() as $currency) {
 }
 ```
 
-## 📧İletişim
+## İletişim
 
 İletişim için ghergedan@gmal.com adresine e-posta gönderin.
 
