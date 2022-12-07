@@ -57,6 +57,7 @@ composer require mlevent/fatura
     -   [Vergi Ekleme](#vergi-ekleme)
     -   [Vergi Listesi](#vergi-listesi)
     -   [Vergiler ve Toplamlar](#vergiler-ve-toplamlar)
+-   [İptal/İtiraz Talepleri](#iptal-itiraz-talepleri)
 -   [GİB Profil Bilgileri](#gi̇b-profil-bilgileri)
 -   [Mükellef Sorgulama](#mükellef-bilgileri)
 -   [Birimler](#birimler)
@@ -677,6 +678,39 @@ print_r($invoice->getTaxes());
 
 // Belgeye ait toplamlar
 print_r($invoice->getTotals());
+```
+
+## İptal/İtiraz Talepleri
+
+Portalda kayıtlı İptal/İtiraz taleplerine ulaşmak için `getRequests` metodunu kullanabilirsiniz. Sonuç bir dizi şeklinde döner.
+
+```php
+$requests = $gib->getRequests('07/12/2020', '07/11/2022');
+```
+
+Yeni iptal/itiraz talebi oluşturmak için `objectionRequest` ve `cancellationRequest` metodlarını kullanabilirsiniz.
+
+```php
+use Mlevent\Fatura\Gib;
+
+// Portal Bağlantısı
+$gib = (new Gib)->setTestCredentials()
+                ->login();
+
+// İtiraz Talebi
+$gib->objectionRequest(
+    uuid            : '94d0d436-d91d-40c0-a238-e335f29b8275',
+    objectionMethod : ObjectionMethod::Noter,
+    documentId      : 'GIB2020000000218',
+    documentDate    : '23-11-2020',
+    explanation     : 'Hatalı İşlem'
+);
+
+// İptal Talebi
+$gib->cancellationRequest(
+    uuid        : '94d0d436-d91d-40c0-a238-e335f29b8275',
+    explanation : 'Hatalı İşlem'
+);
 ```
 
 ## GİB Profil Bilgileri

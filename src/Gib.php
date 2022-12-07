@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Mlevent\Fatura;
 
 use Mlevent\Fatura\Enums\DocumentType;
+use Mlevent\Fatura\Enums\ObjectionMethod;
 use Mlevent\Fatura\Exceptions\ApiException;
 use Mlevent\Fatura\Exceptions\InvalidArgumentException;
 use Mlevent\Fatura\Exceptions\InvalidFormatException;
@@ -399,6 +400,58 @@ class Gib
             'belgeTip'   => $this->documentType->value,
             'cmd'        => 'EARSIV_PORTAL_BELGE_INDIR'
         ]);
+    }
+
+    /**
+     * cancellationRequest
+     */
+    public function cancellationRequest(string $uuid, string $explanation): string
+    {
+        $response = new Client($this->getGateway('dispatch'), 
+            $this->setParams(['EARSIV_PORTAL_IPTAL_TALEBI_OLUSTUR', 'RG_TASLAKLAR'], [
+                'ettn'          => $this->setUuid($uuid), 
+                'onayDurumu'    => 'Onaylandı',
+                'belgeTuru'     => $this->documentType->value,
+                'talepAciklama' => $explanation,
+            ])
+        );
+        return $response->get('data');
+    }
+
+    /**
+     * objectionRequest
+     */
+    public function objectionRequest(string $uuid, ObjectionMethod $objectionMethod, string $documentId, string $documentDate, string $explanation): string
+    {
+        $response = new Client($this->getGateway('dispatch'), 
+            $this->setParams(['EARSIV_PORTAL_ITIRAZ_TALEBI_OLUSTUR', 'RG_TASLAKLAR'], [
+                'ettn'                => $this->setUuid($uuid), 
+                'onayDurumu'          => 'Onaylandı',
+                'belgeTuru'           => $this->documentType->value,
+                'itirazYontemi'       => $objectionMethod->value,
+                'referansBelgeId'     => $documentId,
+                'referansBelgeTarihi' => $documentDate,
+                'talepAciklama'       => $explanation,
+            ])
+        );
+        return $response->get('data');
+    }
+
+    /**
+     * getRequests
+     */
+    public function getRequests(string $startDate, string $endDate): array
+    {
+        if (!FormatValidator::date($startDate) || !FormatValidator::date($endDate)) {
+            throw new InvalidFormatException('Tarih geçerli formatta değil.');
+        }
+        $response = new Client($this->getGateway('dispatch'), 
+            $this->setParams(['EARSIV_PORTAL_GELEN_IPTAL_ITIRAZ_TALEPLERINI_GETIR', 'RG_IPTALITIRAZTASLAKLAR'], [
+                'baslangic' => $startDate, 
+                'bitis'     => $endDate,
+            ])
+        );
+        return $response->get('data');
     }
 
     /**
