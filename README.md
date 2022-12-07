@@ -57,7 +57,7 @@ composer require mlevent/fatura
     -   [Vergi Ekleme](#vergi-ekleme)
     -   [Vergi Listesi](#vergi-listesi)
     -   [Vergiler ve Toplamlar](#vergiler-ve-toplamlar)
--   [İptal/İtiraz Talepleri](#iptal-itiraz-talepleri)
+-   [İptal/İtiraz Talepleri](#iptalitiraz-talepleri)
 -   [GİB Profil Bilgileri](#gi̇b-profil-bilgileri)
 -   [Mükellef Sorgulama](#mükellef-bilgileri)
 -   [Birimler](#birimler)
@@ -680,7 +680,7 @@ print_r($invoice->getTaxes());
 print_r($invoice->getTotals());
 ```
 
-## İptal / İtiraz Talepleri
+## İptal/İtiraz Talepleri
 
 GİB Portalda kayıtlı İptal/İtiraz taleplerine ulaşmak için `getRequests` metodunu kullanabilirsiniz. Sonuç bir dizi şeklinde döner.
 
