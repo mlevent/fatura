@@ -680,9 +680,9 @@ print_r($invoice->getTaxes());
 print_r($invoice->getTotals());
 ```
 
-## İptal/İtiraz Talepleri
+## İptal / İtiraz Talepleri
 
-Portalda kayıtlı İptal/İtiraz taleplerine ulaşmak için `getRequests` metodunu kullanabilirsiniz. Sonuç bir dizi şeklinde döner.
+GİB Portalda kayıtlı İptal/İtiraz taleplerine ulaşmak için `getRequests` metodunu kullanabilirsiniz. Sonuç bir dizi şeklinde döner.
 
 ```php
 $requests = $gib->getRequests('07/12/2020', '07/11/2022');
