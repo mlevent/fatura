@@ -57,7 +57,7 @@ composer require mlevent/fatura
     -   [Vergi Ekleme](#vergi-ekleme)
     -   [Vergi Listesi](#vergi-listesi)
     -   [Vergiler ve Toplamlar](#vergiler-ve-toplamlar)
--   [İptal/İtiraz Talepleri](#iptalitiraz-talepleri)
+-   [İptal/İtiraz Talepleri](#i̇ptali̇tiraz-talepleri)
 -   [GİB Profil Bilgileri](#gi̇b-profil-bilgileri)
 -   [Mükellef Sorgulama](#mükellef-bilgileri)
 -   [Birimler](#birimler)
@@ -71,10 +71,8 @@ e-Arşiv portal üzerinden yeni bir test kullanıcısı oluşturmak ve token alm
 ```php
 use Mlevent\Fatura\Gib;
 
-$gib = new Gib;
-
-$gib->setTestCredentials()
-    ->login();
+$gib = (new Gib)->setTestCredentials()
+                ->login();
 
 echo $gib->getToken();
 ```
@@ -93,10 +91,8 @@ e-Arşiv portal kullanıcı bilgilerinizi `setCredentials` metodunu kullanarak t
 ```php
 use Mlevent\Fatura\Gib;
 
-$gib = new Gib;
-
-$gib->setCredentials('Kullanıcı Kodu', 'Parola')
-    ->login();
+$gib = (new Gib)->setCredentials('Kullanıcı Kodu', 'Parola')
+                ->login();
 
 echo $gib->getToken();
 ```
@@ -691,6 +687,7 @@ $requests = $gib->getRequests('07/12/2020', '07/11/2022');
 Yeni iptal/itiraz talebi oluşturmak için `objectionRequest` ve `cancellationRequest` metodlarını kullanabilirsiniz.
 
 ```php
+use Mlevent\Fatura\Enums\ObjectionMethod;
 use Mlevent\Fatura\Gib;
 
 // Portal Bağlantısı
