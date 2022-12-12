@@ -407,6 +407,83 @@ if ($service->createDraft($producerReceipt)) {
 $service->logout();
 ```
 
+## 💸Vergi Ekleme
+
+Belgedeki hizmetlere `addTax` metodunu kullanarak vergi ekleyebilirsiniz. Vergiler doğrudan belgeye eklenemez, yalnızca öğe modeli üzerinden her bir öğeye ayrı ayrı eklenebilir.
+
+```php
+use Mlevent\Fatura\Enums\Tax;
+use Mlevent\Fatura\Models\InvoiceItemModel;
+
+$invoiceItem = new InvoiceItemModel(
+    malHizmet  : 'Çimento',
+    birim      : Unit::Ton,
+    miktar     : 3,
+    birimFiyat : 1259,
+    kdvOrani   : 18,
+);
+
+// Hizmete vergi ekleme
+$invoiceItem->addTax(Tax::Damga,    15)  // %15 damga vergisi
+            ->addTax(Tax::GVStopaj, 25); // %25 gelir vergisi
+
+// Vergi kodu kullanarak vergi ekleme
+$invoiceItem->addTax(Tax::from(1047), 15); // %15 damga vergisi
+```
+
+### Vergi Listesi
+
+Vergi listesine ulaşmak için `cases` statik metodunu kullanabilirsiniz;
+
+```php
+use Mlevent\Fatura\Enums\Tax;
+
+// Vergiler
+foreach (Tax::cases() as $tax) {
+    echo $tax->value;   // 4071
+    echo $tax->name;    // ElkHavagazTuketim
+    echo $tax->alias(); // Elektrik Havagaz Tüketim Vergisi
+}
+```
+
+### Vergiler ve Toplamlar
+
+Belgeye eklenen öğelere ulaşmak için `getItems` metodunu kullanabilirsiniz;
+
+```php
+use Mlevent\Fatura\Models\InvoiceModel;
+use Mlevent\Fatura\Models\InvoiceItemModel;
+
+$invoice = new InvoiceModel(...);
+
+$invoice->addItem(
+    new InvoiceItemModel(...),
+    new InvoiceItemModel(...),
+);
+
+// Her bir öğeye ait vergiler
+foreach ($invoice->getItems() as $item) {
+
+    // Öğeye eklenen vergiler toplamı
+    print_r($item->totalTaxAmount());
+
+    // Öğeye eklenen vergilere ait kdv toplamı
+    print_r($item->totalTaxVat());
+
+    // Öğeye eklenen vergiler
+    print_r($item->getTaxes());
+
+    // Öğeye ait toplamlar
+    print_r($item->getTotals());
+}
+
+// Belgeye ait vergiler
+print_r($invoice->getTaxes());
+
+// Belgeye ait toplamlar
+print_r($invoice->getTotals());
+```
+
 ## Belge Günceleme
 
 Fatura oluşturulurken `faturaUuid` ve `belgeNumarasi` belirtildiyse; portalda bu bilgilerle eşleşen belge güncellenir, diğer durumda portal üzerinde yeni bir belge oluşturulur.
@@ -608,75 +685,6 @@ $documents = $gib->onlyUnsigned()
 | `setLimit($limit, $offset)` | Sonuçlar için limit belirleme.          |
 | `sortAsc()`                 | Önce ilk kayıtlar.                      |
 | `sortDesc()`                | (Varsayılan) Önce son kayıtlar.         |
-
-## 💸Vergi Ekleme
-
-Belgedeki hizmetlere `addTax` metodunu kullanarak vergi ekleyebilirsiniz. Vergiler doğrudan belgeye eklenemez, yalnızca öğe modeli üzerinden her bir öğeye ayrı ayrı eklenebilir.
-
-```php
-use Mlevent\Fatura\Enums\Tax;
-use Mlevent\Fatura\Models\InvoiceItemModel;
-
-$invoiceItem = new InvoiceItemModel(
-    malHizmet  : 'Çimento',
-    birim      : Unit::Ton,
-    miktar     : 3,
-    birimFiyat : 1259,
-    kdvOrani   : 18,
-);
-
-// Hizmete vergi ekleme
-$invoiceItem->addTax(Tax::Damga,    15)  // %15 damga vergisi
-            ->addTax(Tax::GVStopaj, 25); // %25 gelir vergisi
-
-// Vergi kodu kullanarak vergi ekleme
-$invoiceItem->addTax(Tax::from(1047), 15); // %15 damga vergisi
-```
-
-### Vergi Listesi
-
-Vergi listesine ulaşmak için `cases` statik metodunu kullanabilirsiniz;
-
-```php
-use Mlevent\Fatura\Enums\Tax;
-
-// Vergiler
-foreach (Tax::cases() as $tax) {
-    echo $tax->value;   // 4071
-    echo $tax->name;    // ElkHavagazTuketim
-    echo $tax->alias(); // Elektrik Havagaz Tüketim Vergisi
-}
-```
-
-### Vergiler ve Toplamlar
-
-Belgeye eklenen öğelere ulaşmak için `getItems` metodunu kullanabilirsiniz;
-
-```php
-use Mlevent\Fatura\Models\InvoiceModel;
-use Mlevent\Fatura\Models\InvoiceItemModel;
-
-$invoice = new InvoiceModel(...);
-
-$invoice->addItem(
-    new InvoiceItemModel(...),
-    new InvoiceItemModel(...),
-);
-
-// Her bir öğeye ait vergiler
-foreach ($invoice->getItems() as $item) {
-    print_r($item->getTaxes());       // Öğeye eklenen vergiler
-    print_r($item->getTotals());      // Öğeye ait toplamlar
-    print_r($item->totalTaxAmount()); // Öğeye eklenen vergiler toplamı
-    print_r($item->totalTaxVat());    // Öğeye eklenen vergilere ait kdv toplamı
-}
-
-// Belgeye ait vergiler
-print_r($invoice->getTaxes());
-
-// Belgeye ait toplamlar
-print_r($invoice->getTotals());
-```
 
 ## İptal/İtiraz Talepleri
 
