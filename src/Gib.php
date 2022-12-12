@@ -455,15 +455,6 @@ class Gib
     }
 
     /**
-     * selectColumn
-     */
-    public function selectColumn(string|array $column): self
-    {
-        $this->column = (array) $column;
-        return $this;
-    }
-
-    /**
      * getAll
      */
     public function getAll(string $startDate, string $endDate): array
@@ -526,14 +517,21 @@ class Gib
     }
 
     /**
+     * selectColumn
+     */
+    public function selectColumn(string $column, $key = null): self
+    {
+        $this->column = [$column, $key];
+        return $this;
+    }
+
+    /**
      * mapColumn
      */
     public function mapColumn(array $data): array
     {
         if (sizeof($this->column)) {
-            $data = array_map(function($item) {
-                return array_intersect_key($item, array_flip($this->column));
-            }, $data);
+            $data = array_column($data, ...$this->column);
             $this->column = [];
         }
         return $data;

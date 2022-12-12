@@ -139,6 +139,8 @@ Kütüphaneyi kullanarak aşağıdaki fatura türleri ile çalışabilirsiniz;
 
 > Döviz cinsinden fatura düzenlemek için modelde `paraBirimi` ve `dovizKuru` parametreleri kullanılmalıdır.
 
+Belge oluştururken model kullanmak istemiyorsanız `/examples` klasörü altındaki [createInvoiceWithoutModel.php](https://github.com/mlevent/fatura/blob/master/examples/createInvoiceWithoutModel.php) dosyasındaki örneği inceleyebilirsiniz.
+
 ### Satış
 
 Satış faturası oluşturabilmek için, **faturaTipi** `InvoiceType::Satis` gönderilmelidir.
@@ -452,7 +454,7 @@ Taslak belgeleri silmek için `deleteDraft` metodu kullanılmalıdır. Metod bir
 Aşağıdaki örnek, bilinen bir tarih aralığındaki tüm taslak belgeleri siler.
 
 ```php
-$fetchToDelete = $gib->selectColumn(['ettn'])
+$fetchToDelete = $gib->selectColumn('ettn')
                      ->onlyUnsigned()
                      ->getAll('10/10/2022', '10/15/2022');
 
@@ -490,7 +492,7 @@ Doğrulama işlemini tamamlamak için kullanılacak `completeSmsVerification` y�
 
 ```php
 // Portaldan belirli bir tarih aralığındaki tüm onaysız belgeleri getir
-$setToSign = $gib->selectColumn(['ettn'])
+$setToSign = $gib->selectColumn('ettn')
                  ->onlyUnsigned()
                  ->getAll('01/10/2022', '15/10/2022');
 
@@ -696,10 +698,10 @@ $gib = (new Gib)->setTestCredentials()
 
 // İtiraz Talebi
 $gib->objectionRequest(
+    objectionMethod : ObjectionMethod::Kep,
     uuid            : '94d0d436-d91d-40c0-a238-e335f29b8275',
-    objectionMethod : ObjectionMethod::Noter,
     documentId      : 'GIB2020000000218',
-    documentDate    : '23-11-2020',
+    documentDate    : '23/11/2020',
     explanation     : 'Hatalı İşlem'
 );
 
