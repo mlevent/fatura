@@ -66,7 +66,7 @@ class ServiceTest extends TestCase
         $this->assertEquals($getNewUserData['apartmanAdi'], 'Lale Apartmanı');
     }
 
-    public function testCreateInvoice()
+    public function testCreateUpdateCancelInvoice()
     {
         $invoice = InvoiceModel::new(
             vknTckn         : '11111111111',
@@ -110,11 +110,32 @@ class ServiceTest extends TestCase
         $createdInvoice = $service->getDocument($invoice->getUuid());
 
         $this->assertTrue($isCreated);
-
+        $this->assertEquals($createdInvoice['aliciAdi'],                 $invoiceData['aliciAdi']);
         $this->assertEquals($createdInvoice['malhizmetToplamTutari'],    $invoiceData['malhizmetToplamTutari']);
         $this->assertEquals($createdInvoice['matrah'],                   $invoiceData['matrah']);
         $this->assertEquals($createdInvoice['toplamIskonto'],            $invoiceData['toplamIskonto']);
         $this->assertEquals($createdInvoice['vergilerDahilToplamTutar'], $invoiceData['vergilerDahilToplamTutar']);
         $this->assertEquals($createdInvoice['odenecekTutar'],            $invoiceData['odenecekTutar']);
+
+        // Import and Update
+        $importedInvoice = InvoiceModel::import(array_merge($createdInvoice, [
+            'aliciAdi'    => 'Nureddin',
+            'aliciSoyadi' => 'Nebati',
+        ]));
+
+        $updateData = $importedInvoice->export();
+
+        $isUpdated = $service->createDraft($updateData);
+        $updatedInvoice = $service->getDocument($importedInvoice->getUuid());
+
+        $this->assertTrue($isUpdated);
+        $this->assertEquals($updatedInvoice['aliciAdi'],    $updateData['aliciAdi']);
+        $this->assertEquals($updatedInvoice['aliciSoyadi'], $updateData['aliciSoyadi']);
+
+        // Cancel
+        $cancelledInvoice = $service->deleteDraft([$importedInvoice->getUuid()]);
+
+        $this->assertTrue($cancelledInvoice);
+        $this->assertEquals($service->rowCount(), 1);
     }
 }
