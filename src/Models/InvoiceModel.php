@@ -149,11 +149,13 @@ class InvoiceModel extends AbstractModel
     public function export(): array
     {
         // İskonto
-        $this->toplamIskonto = abs(
-            array_column_sum($this->getItems(), 'iskontoTutari', fn($item) => !$item->iskontoTipi)
-            -
-            array_column_sum($this->getItems(), 'iskontoTutari', fn($item) => $item->iskontoTipi)
-        );
+        if (!$this->isImported()) {
+            $this->toplamIskonto = abs(
+                array_column_sum($this->getItems(), 'iskontoTutari', fn($item) => !$item->iskontoTipi)
+                -
+                array_column_sum($this->getItems(), 'iskontoTutari', fn($item) => $item->iskontoTipi)
+            );
+        }
         
         return $this->keyMapper(
             array_merge($this->toArray(), $this->getTotals(), [
