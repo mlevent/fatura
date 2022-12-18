@@ -811,7 +811,7 @@ foreach (Currency::cases() as $currency) {
 
 ## 📧İletişim
 
-İletişim için ghergedan@gmal.com adresine e-posta gönderin.
+İletişim için ghergedan@gmail.com adresine e-posta gönderin.
 
 ---
 
