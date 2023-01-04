@@ -49,10 +49,10 @@ class Client
     /**
      * get
      *
-     * @param  string|null  $element
-     * @return string|array
+     * @param  string|null $element
+     * @return mixed
      */
-    public function get(?string $element = null): string|array
+    public function get(?string $element = null): mixed
     {
         return is_null($element) 
             ? $this->response
@@ -62,10 +62,10 @@ class Client
     /**
      * object
      *
-     * @param  string|null   $element
-     * @return string|object
+     * @param  string|null $element
+     * @return mixed
      */
-    public function object(?string $element = null): string|object
+    public function object(?string $element = null): mixed
     {
         $response = json_decode(json_encode($this->response, JSON_FORCE_OBJECT), false);
         
