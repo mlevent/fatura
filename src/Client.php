@@ -30,9 +30,11 @@ class Client
      */
     public function __construct(string $url, ?array $parameters = null, bool $post = true)
     {
-        $client = new \GuzzleHttp\Client(self::$headers);
         try {
-            $request = $client->request($post ? 'POST' : 'GET', $url, ['form_params' => $parameters]);
+            $request = (new \GuzzleHttp\Client)->request($post ? 'POST' : 'GET', $url, [
+                'headers'     => self::$headers, 
+                'form_params' => $parameters
+            ]);
             if ($response = json_decode($request->getBody()->getContents(), true)) {
                 if (is_array($response)) {
                     $this->response = $response;
