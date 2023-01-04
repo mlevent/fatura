@@ -6,6 +6,7 @@ namespace Mlevent\Fatura;
 
 use Mlevent\Fatura\Enums\DocumentType;
 use Mlevent\Fatura\Enums\ObjectionMethod;
+use Mlevent\Fatura\Enums\Type;
 use Mlevent\Fatura\Exceptions\ApiException;
 use Mlevent\Fatura\Exceptions\InvalidArgumentException;
 use Mlevent\Fatura\Exceptions\InvalidFormatException;
@@ -475,15 +476,16 @@ class Gib
     /**
      * getAllIssuedToMe
      */
-    public function getAllIssuedToMe(string $startDate, string $endDate): array
+    public function getAllIssuedToMe(string $startDate, string $endDate, string $hourlySearch = 'NONE'): array
     {
         if (!FormatValidator::date($startDate) || !FormatValidator::date($endDate)) {
             throw new InvalidFormatException('Tarih geçerli formatta değil.');
         }
         $response = new Client($this->getGateway('dispatch'), 
             $this->setParams(['EARSIV_PORTAL_ADIMA_KESILEN_BELGELERI_GETIR', 'RG_ALICI_TASLAKLAR'], [
-                'baslangic' => $startDate, 
-                'bitis'     => $endDate,
+                'baslangic'            => $startDate, 
+                'bitis'                => $endDate,
+                'hourlySearchInterval' => $hourlySearch,
             ])
         );
         return $this->filterDocuments($response->get('data'));
@@ -492,8 +494,10 @@ class Gib
     /**
      * filterDocuments
      */
-    protected function filterDocuments(array $documents): array
+    protected function filterDocuments(?array $documents): array
     {
+        if (is_null($documents)) return [];
+        
         if (sizeof($this->filters)) {
             array_map(function ($key, $val) use (&$documents){
                 $documents = array_filter($documents, function ($document) use ($key, $val) {
