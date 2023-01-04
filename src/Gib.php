@@ -466,7 +466,7 @@ class Gib
             $this->setParams(['EARSIV_PORTAL_TASLAKLARI_GETIR', 'RG_TASLAKLAR'], [
                 'baslangic' => $startDate, 
                 'bitis'     => $endDate, 
-                'hangiTip'  => 'Buyuk',
+                'hangiTip'  => Type::eArsivBuyuk,
             ])
         );
         return $this->filterDocuments($response->get('data'));

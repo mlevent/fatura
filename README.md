@@ -52,7 +52,7 @@ composer require mlevent/fatura
     -   [Adıma Düzenlenen Belgeler](#adıma-düzenlenen-belgeler)
     -   [Belge Detayları](#belge-detayları)
     -   [HTML Çıktı Alma](#html-çıktı-alma)
-    -   [Belge İndirme Adresi](#belge-indirme-adresi)
+    -   [Belge İndirme Adresi](#belge-i̇ndirme-adresi)
 -   [Vergiler](#vergi-ekleme)
     -   [Vergi Ekleme](#vergi-ekleme)
     -   [Vergi Listesi](#vergi-listesi)
