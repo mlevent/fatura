@@ -6,9 +6,9 @@
 <img src="https://img.shields.io/packagist/v/mlevent/fatura?style=plastic"/>
 <img src="https://img.shields.io/github/last-commit/mlevent/fatura?style=plastic"/>
 <img src="https://img.shields.io/github/issues/mlevent/fatura?style=plastic"/>
+<img src="https://img.shields.io/packagist/dt/mlevent/fatura?style=plastic"/>
 <img src="https://img.shields.io/github/stars/mlevent/fatura?style=plastic"/>
 <img src="https://img.shields.io/github/forks/mlevent/fatura?style=plastic"/>
-<img src="https://img.shields.io/packagist/dm/mlevent/fatura?style=plastic"/>
 </p>
 
 ![Fatura](https://i.imgur.com/PsJTtmL.png)
