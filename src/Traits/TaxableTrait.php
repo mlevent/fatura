@@ -94,23 +94,32 @@ trait TaxableTrait
     }
 
     /**
-     * exportTaxes
+     * calculateTaxes
      *
-     * @param  boolean $lowerFirst
-     * @return self
+     * @return void
      */
-    protected function exportTaxes($lowerFirst = false): self
+    protected function calculateTaxes(): void
     {
         $this->setTaxes(array_map(function ($tax) {
             return array_map(fn ($i) => is_callable($i) ? $i() : $i, $tax);
         }, $this->getTaxes()));
-        
-        foreach($this->taxes as $tax) {
+    }
+
+    /**
+     * exportTaxes
+     *
+     * @param  boolean $lowerFirst
+     * @return array
+     */
+    protected function exportTaxes($lowerFirst = false): array
+    {
+        $taxes = [];
+        foreach($this->getTaxes() as $tax) {
             foreach ($this->taxKeyMapper($tax['model'], $lowerFirst) as $i => $v) {
-                $this->$v = amount_format($tax[$i]);
+                $taxes[$v] = amount_format($tax[$i]);
             }
         }
-        return $this;
+        return $taxes;
     }
 
     /**

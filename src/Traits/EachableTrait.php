@@ -21,13 +21,13 @@ trait EachableTrait
     }
 
     /**
-     * eachWithData
+     * eachWith
      *
      * @param  iterable $data
      * @param  callable $fn
      * @return self
      */
-    public function eachWithData(iterable $data, callable $fn): self
+    public function eachWith(iterable $data, callable $fn): self
     {
         array_walk($data, function($i, $k) use($fn){
             $fn($this, $i, $k);

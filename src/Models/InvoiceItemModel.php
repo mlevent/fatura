@@ -145,7 +145,10 @@ class InvoiceItemModel implements ItemModelInterface
             }
         }
 
-        return $this->exportTaxes();
+        // Eklenen vergileri hesapla
+        $this->calculateTaxes();
+
+        return $this;
     }
 
     /**
@@ -173,7 +176,7 @@ class InvoiceItemModel implements ItemModelInterface
     public function export(): array
     {
         return $this->keyMapper(
-            array_merge($this->toArray(), $this->getTotals(), [
+            array_merge($this->toArray(), $this->getTotals(), $this->exportTaxes(), [
                 'birim'       => $this->birim->value,
                 'iskontoTipi' => !$this->iskontoTipi ? 'İskonto' : 'Arttırım',
             ]

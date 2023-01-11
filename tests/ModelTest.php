@@ -27,7 +27,7 @@ class ModelTest extends TestCase
                 birimFiyat   : 10,
                 kdvOrani     : 18,
                 iskontoOrani : 10,
-            )->eachWithData(Tax::cases(), fn ($tax, $i) => $tax->addTax($i, 50))
+            )->eachWith(Tax::cases(), fn ($tax, $i) => $tax->addTax($i, 50))
         );
 
         $invoice = $invoice->export();
