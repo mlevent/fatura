@@ -147,7 +147,6 @@ class InvoiceItemModel implements ItemModelInterface
 
         // Eklenen vergileri hesapla
         $this->calculateTaxes();
-
         return $this;
     }
 
