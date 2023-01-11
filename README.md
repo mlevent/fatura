@@ -2,12 +2,13 @@
 <p align="center">GİB e-Arşiv portal üzerinde; e-Fatura, e-SMM, e-Müstahsil oluşturma, düzenleme, imzalama vb. işlemlere olanak tanır.</p>
 
 <p align="center">
+<img src="https://img.shields.io/packagist/dependency-v/mlevent/fatura/php?style=plastic"/>
 <img src="https://img.shields.io/packagist/v/mlevent/fatura?style=plastic"/>
-<img src="https://img.shields.io/github/license/mlevent/fatura?style=plastic"/>
-<img src="https://img.shields.io/github/issues/mlevent/fatura?style=plastic"/>
 <img src="https://img.shields.io/github/last-commit/mlevent/fatura?style=plastic"/>
+<img src="https://img.shields.io/github/issues/mlevent/fatura?style=plastic"/>
 <img src="https://img.shields.io/github/stars/mlevent/fatura?style=plastic"/>
 <img src="https://img.shields.io/github/forks/mlevent/fatura?style=plastic"/>
+<img src="https://img.shields.io/packagist/dm/mlevent/fatura?style=plastic"/>
 </p>
 
 ![Fatura](https://i.imgur.com/PsJTtmL.png)
