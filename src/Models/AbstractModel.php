@@ -72,6 +72,13 @@ abstract class AbstractModel implements ModelInterface
         } else {
             $this->saat = curdate('H:i:s');
         }
+
+        if ($this->malHizmetTable) {
+            $items = $this->malHizmetTable;
+            $this->clearItems()->addItem(...array_map(
+                fn ($item) => new InvoiceItemModel(...$item), $items
+            ));
+        }
     }
 
     /**
@@ -124,6 +131,17 @@ abstract class AbstractModel implements ModelInterface
         if (!$this->isImported() || $this->isImportedDirty()) {
             $this->calculateTotals();
         }
+    }
+
+    /**
+     * clearItems
+     *
+     * @return self
+     */
+    protected function clearItems(): self
+    {
+        $this->malHizmetTable = [];
+        return $this;
     }
 
     /**
