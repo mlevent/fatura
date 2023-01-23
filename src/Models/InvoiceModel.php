@@ -18,7 +18,7 @@ class InvoiceModel extends AbstractModel
         public string      $mahalleSemtIlce,
         public string      $sehir,
         public string      $ulke,
-        public Type        $hangiTip                 = Type::eArsiv,
+        public Type        $hangiTip                 = Type::eArsivFatura,
         public string      $uuid                     = '',
         public string      $belgeNumarasi            = '',
         public string      $tarih                    = '',

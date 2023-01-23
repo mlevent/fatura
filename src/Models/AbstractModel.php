@@ -9,6 +9,7 @@ use Mlevent\Fatura\Exceptions\InvalidFormatException;
 use Mlevent\Fatura\Interfaces\ItemModelInterface;
 use Mlevent\Fatura\Interfaces\ModelInterface;
 use Mlevent\Fatura\Traits\ArrayableTrait;
+use Mlevent\Fatura\Traits\EachableTrait;
 use Mlevent\Fatura\Traits\ImportableTrait;
 use Mlevent\Fatura\Traits\MapableTrait;
 use Mlevent\Fatura\Traits\NewableTrait;
@@ -18,6 +19,7 @@ use Ramsey\Uuid\Nonstandard\Uuid;
 abstract class AbstractModel implements ModelInterface
 {
     use ArrayableTrait,
+        EachableTrait,
         ImportableTrait,
         MapableTrait,
         NewableTrait;
@@ -72,6 +74,12 @@ abstract class AbstractModel implements ModelInterface
         } else {
             $this->saat = curdate('H:i:s');
         }
+
+        if (!$this->isImported() && $items = $this->getItems()) {
+            $this->clearItems()->addItem(...array_map(
+                fn ($item) => new InvoiceItemModel(...$item), $items
+            ));
+        }
     }
 
     /**
@@ -124,6 +132,17 @@ abstract class AbstractModel implements ModelInterface
         if (!$this->isImported() || $this->isImportedDirty()) {
             $this->calculateTotals();
         }
+    }
+
+    /**
+     * clearItems
+     *
+     * @return self
+     */
+    protected function clearItems(): self
+    {
+        $this->malHizmetTable = [];
+        return $this;
     }
 
     /**
