@@ -276,9 +276,16 @@ class Gib
      */
     public function completeSmsVerification(string $code, string $oid, array $documents): bool
     {
+        $setToSign = array_map(function ($uuid) {
+            return [
+                'belgeTuru' => $this->documentType->value,
+                'ettn'      => $uuid,
+            ];
+        }, $this->setUuid($documents));
+
         $response = new Client($this->getGateway('dispatch'), 
             $this->setParams(['0lhozfib5410mp', 'RG_SMSONAY'], [
-                'DATA'  => $this->setUuid($documents),
+                'DATA'  => $setToSign,
                 'SIFRE' => $code, 
                 'OID'   => $oid, 
                 'OPR'   => 1, 
@@ -321,7 +328,7 @@ class Gib
      */
     public function deleteDraft(array $documents, string $reason = 'Hatalı İşlem'): bool
     {
-        $deletedDocuments = array_map(function ($uuid) {
+        $setToDelete = array_map(function ($uuid) {
             return [
                 'belgeTuru' => $this->documentType->value,
                 'ettn'      => $uuid,
@@ -330,7 +337,7 @@ class Gib
 
         $response = new Client($this->getGateway('dispatch'), 
             $this->setParams(['EARSIV_PORTAL_FATURA_SIL', 'RG_TASLAKLAR'], [
-                'silinecekler' => $deletedDocuments, 
+                'silinecekler' => $setToDelete, 
                 'aciklama'     => $reason,
             ])
         );
@@ -467,7 +474,7 @@ class Gib
             $this->setParams(['EARSIV_PORTAL_TASLAKLARI_GETIR', 'RG_TASLAKLAR'], [
                 'baslangic' => $startDate, 
                 'bitis'     => $endDate, 
-                'hangiTip'  => Type::eArsivBuyuk,
+                'hangiTip'  => $this->testMode ? Type::eArsivDiger : Type::eArsivFatura,
             ])
         );
         return $this->filterDocuments($response->get('data'));
