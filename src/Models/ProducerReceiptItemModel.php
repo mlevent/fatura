@@ -66,7 +66,8 @@ class ProducerReceiptItemModel implements ItemModelInterface
      */
     public function prepare(ModelInterface $parent): self
     {
-        return $this->exportTaxes(true);
+        $this->calculateTaxes();
+        return $this;
     }
 
     /**
@@ -89,7 +90,7 @@ class ProducerReceiptItemModel implements ItemModelInterface
      */
     public function export(): array
     {
-        return $this->keyMapper(array_merge($this->toArray(), $this->getTotals(), [
+        return $this->keyMapper(array_merge($this->toArray(), $this->getTotals(), $this->exportTaxes(true), [
             'birim' => $this->birim->value,
         ]));
     }
