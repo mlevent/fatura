@@ -77,7 +77,7 @@ abstract class AbstractModel implements ModelInterface
 
         if (!$this->isImported() && $items = $this->getItems()) {
             $this->clearItems()->addItem(...array_map(
-                fn ($item) => new InvoiceItemModel(...$item), $items
+                fn ($item) => new (substr(get_called_class(), 0, -5) . 'ItemModel')(...$item), $items
             ));
         }
     }
