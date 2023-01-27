@@ -411,6 +411,29 @@ class Gib
     }
 
     /**
+     * saveToDisk
+     *
+     * @param  string         $uuid
+     * @param  string|null    $dirName
+     * @param  string|null    $fileName
+     * @return string|boolean
+     */
+    public function saveToDisk(string $uuid, string $dirName = null, string $fileName = null): string|bool
+    {
+        $saveDir = realpath($dirName ?? '.' . DIRECTORY_SEPARATOR);
+        $fullDir = join(DIRECTORY_SEPARATOR, [$saveDir, $fileName ?? $uuid]) . '.zip';
+
+        if (!$saveDir) {
+            throw new InvalidArgumentException("Geçersiz dosya yolu: {$dirName}");
+        }
+
+        if (file_put_contents($fullDir, file_get_contents($this->getDownloadURL($uuid)))) {
+            return $fullDir;
+        }
+        return false;
+    }
+
+    /**
      * cancellationRequest
      */
     public function cancellationRequest(string $uuid, string $explanation): string
