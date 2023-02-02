@@ -65,6 +65,12 @@ class InvoiceModel extends AbstractModel
 
         if ($this->paraBirimi != Currency::TRY && !$this->dovizKuru)
             throw new InvalidArgumentException('Kur bilgisi belirtilmedi.', $this);
+
+        if ($returnItems = $this->getReturnItems()) {
+            $this->addReturnItem(...array_map(function ($item) {
+                return new InvoiceReturnItemModel(...$item);
+            }, $returnItems));
+        }
     }
     
     /**
@@ -93,6 +99,16 @@ class InvoiceModel extends AbstractModel
             }
         }
         return $this;
+    }
+
+    /**
+     * getReturnItems
+     *
+     * @return array
+     */
+    public function getReturnItems(): array
+    {
+        return $this->iadeTable;
     }
 
     /**
@@ -148,7 +164,7 @@ class InvoiceModel extends AbstractModel
      */
     public function export(): array
     {
-        // İskonto
+        // İçe aktarılmadıysa genel iskontoyu otomatik hesapla
         if (!$this->isImported()) {
             $this->toplamIskonto = abs(
                 array_column_sum($this->getItems(), 'iskontoTutari', fn($item) => !$item->iskontoTipi)

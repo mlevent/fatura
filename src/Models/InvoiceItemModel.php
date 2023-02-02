@@ -13,6 +13,7 @@ use Mlevent\Fatura\Interfaces\ItemModelInterface;
 use Mlevent\Fatura\Interfaces\ModelInterface;
 use Mlevent\Fatura\Traits\ArrayableTrait;
 use Mlevent\Fatura\Traits\EachableTrait;
+use Mlevent\Fatura\Traits\ImportableTrait;
 use Mlevent\Fatura\Traits\MapableTrait;
 use Mlevent\Fatura\Traits\NewableTrait;
 use Mlevent\Fatura\Traits\TaxableTrait;
@@ -22,6 +23,7 @@ class InvoiceItemModel implements ItemModelInterface
 {
     use ArrayableTrait,
         EachableTrait,
+        ImportableTrait,
         MapableTrait, 
         NewableTrait,
         TaxableTrait;
@@ -29,9 +31,9 @@ class InvoiceItemModel implements ItemModelInterface
     public function __construct(
         public string $malHizmet,
         public float  $miktar,
-        public Unit   $birim,
         public float  $birimFiyat,
         public int    $kdvOrani,
+        public Unit   $birim            = Unit::Adet,
         public float  $fiyat            = 0,
         public bool   $iskontoTipi      = false,
         public float  $iskontoOrani     = 0,
@@ -49,29 +51,33 @@ class InvoiceItemModel implements ItemModelInterface
             throw new InvalidArgumentException('Geçersiz KDV oranı.', $this);
         }
 
-        // Fiyat
-        $this->fiyat = $this->fiyat 
-            ?: ($this->miktar * $this->birimFiyat);
+        // İçe aktarıldıysa hesaplama
+        if (!$this->isImported()) {
 
-        // İskonto tutarı
-        if ($this->iskontoOrani && !$this->iskontoTutari) {
-            $this->iskontoTutari = percentage($this->fiyat, $this->iskontoOrani);
-        }
+            // Fiyat
+            $this->fiyat = $this->fiyat 
+                ?: ($this->miktar * $this->birimFiyat);
 
-        // İskonto sonrası yeni tutar
-        if (!$this->malHizmetTutari) {
-            if (!$this->iskontoTutari) {
-                $this->malHizmetTutari = $this->fiyat;
-            } else {
-                $this->malHizmetTutari = (!$this->iskontoTipi 
-                    ? $this->fiyat - $this->iskontoTutari 
-                    : $this->fiyat + $this->iskontoTutari);
+            // İskonto tutarı
+            if ($this->iskontoOrani && !$this->iskontoTutari) {
+                $this->iskontoTutari = percentage($this->fiyat, $this->iskontoOrani);
             }
-        }
 
-        // KDV tutarı
-        $this->kdvTutari = $this->kdvTutari 
-            ?: percentage($this->malHizmetTutari, $this->kdvOrani);
+            // İskonto sonrası yeni tutar
+            if (!$this->malHizmetTutari) {
+                if (!$this->iskontoTutari) {
+                    $this->malHizmetTutari = $this->fiyat;
+                } else {
+                    $this->malHizmetTutari = (!$this->iskontoTipi 
+                        ? $this->fiyat - $this->iskontoTutari 
+                        : $this->fiyat + $this->iskontoTutari);
+                }
+            }
+
+            // KDV tutarı
+            $this->kdvTutari = $this->kdvTutari 
+                ?: percentage($this->malHizmetTutari, $this->kdvOrani);
+        }
     }
 
     /**

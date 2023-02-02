@@ -75,10 +75,14 @@ abstract class AbstractModel implements ModelInterface
             $this->saat = curdate('H:i:s');
         }
 
-        if (!$this->isImported() && $items = $this->getItems()) {
-            $this->clearItems()->addItem(...array_map(
-                fn ($item) => new (substr(get_called_class(), 0, -5) . 'ItemModel')(...$item), $items
-            ));
+        if (!$this->isImportedFromApi() && $items = $this->getItems()) {
+            $this->clearItems()->addItem(...array_map(function ($item) {
+                $itemModelName = (substr(get_called_class(), 0, -5) . 'ItemModel');
+                if ($this->isImportedFromUser()) {
+                    return $itemModelName::import($item);
+                }
+                return new $itemModelName(...$item);
+            }, $items));
         }
     }
 
@@ -118,7 +122,7 @@ abstract class AbstractModel implements ModelInterface
             $this->malHizmetTable[] = $item->prepare($this);
         }
 
-        // İçe aktarılan veriye yeni öğe eklendiyse
+        // İçe aktarılan veriye yeni öğe eklendiyse yalnızca model ile oluşturulan öğeleri kullan
         if ($this->isImportedClean()) {
             $this->malHizmetTable = array_values(
                 array_filter($this->getItems(), function ($item) {

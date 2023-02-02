@@ -9,6 +9,7 @@ use Mlevent\Fatura\Enums\Unit;
 use Mlevent\Fatura\Interfaces\ItemModelInterface;
 use Mlevent\Fatura\Interfaces\ModelInterface;
 use Mlevent\Fatura\Traits\ArrayableTrait;
+use Mlevent\Fatura\Traits\ImportableTrait;
 use Mlevent\Fatura\Traits\MapableTrait;
 use Mlevent\Fatura\Traits\NewableTrait;
 use Mlevent\Fatura\Traits\TaxableTrait;
@@ -16,6 +17,7 @@ use Mlevent\Fatura\Traits\TaxableTrait;
 class ProducerReceiptItemModel implements ItemModelInterface
 {
     use ArrayableTrait,
+        ImportableTrait,
         MapableTrait,
         NewableTrait,
         TaxableTrait;
@@ -23,17 +25,21 @@ class ProducerReceiptItemModel implements ItemModelInterface
     public function __construct(
         public string $malHizmet,
         public float  $miktar,
-        public Unit   $birim,
         public float  $birimFiyat,
+        public Unit   $birim           = Unit::Adet,
         public float  $malHizmetTutari = 0,
         public int    $gvStopajOrani   = 0,
     ) {
-        // Tutar
-        $this->malHizmetTutari = $this->malHizmetTutari 
-            ?: ($this->miktar * $this->birimFiyat);
+        // İçe aktarıldıysa hesaplama
+        if (!$this->isImported()) {
 
-        // GVStopaj
-        $this->addTax(Tax::GVStopaj, rate: $this->gvStopajOrani);
+            // Tutar
+            $this->malHizmetTutari = $this->malHizmetTutari 
+                ?: ($this->miktar * $this->birimFiyat);
+
+            // GVStopaj
+            $this->addTax(Tax::GVStopaj, rate: $this->gvStopajOrani);
+        }
     }
 
     /**

@@ -426,7 +426,6 @@ class Gib
         if (!$saveDir) {
             throw new InvalidArgumentException("Geçersiz dosya yolu: {$dirName}");
         }
-
         if (file_put_contents($fullDir, file_get_contents($this->getDownloadURL($uuid)))) {
             return $fullDir;
         }

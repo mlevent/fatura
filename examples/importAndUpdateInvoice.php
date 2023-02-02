@@ -19,6 +19,8 @@ try {
         'adres'    => 'Muhabbet Sk.',
     ]));
 
+    dd($invoice->export());
+
     $invoice->addItem(
         InvoiceItemModel::new(
             malHizmet  : 'Muhtelif Oyuncak',
