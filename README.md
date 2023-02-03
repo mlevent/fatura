@@ -11,7 +11,7 @@
 <img src="https://img.shields.io/github/forks/mlevent/fatura?style=plastic"/>
 </p>
 
-![Fatura](https://i.imgur.com/PsJTtmL.png)
+![Fatura](https://i.imgur.com/4rsR0of.png)
 
 ## Başlarken
 
