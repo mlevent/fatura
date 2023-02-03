@@ -149,6 +149,7 @@ enum Tax: string
         return match ($this) {
             self::OTV1Liste         => true,
             self::OTV1ListeTevkifat => true,
+            self::Konaklama         => true,
             default                 => false,
         };
     }
@@ -163,6 +164,7 @@ enum Tax: string
         return match ($this) {
             self::OTV1Liste         => 0,
             self::OTV1ListeTevkifat => 100,
+            self::Konaklama         => 2,
         };
     }
 

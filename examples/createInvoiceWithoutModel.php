@@ -2,12 +2,12 @@
 
 use Mlevent\Fatura\Exceptions\FaturaException;
 use Mlevent\Fatura\Gib;
-use Ramsey\Uuid\Uuid;
 
 try {
 
+    // Fatura Detayları
     $invoice = [
-        'faturaUuid'               => Uuid::uuid1()->toString(),
+        'faturaUuid'               => create_uuid(),
         'belgeNumarasi'            => '',
         'faturaTarihi'             => date('d/m/Y'),
         'saat'                     => date('H:m:s'),
@@ -57,6 +57,7 @@ try {
         'not'                      => '',
     ];
 
+    // Mal/Hizmet Detayları
     $invoice['malHizmetTable'] = [
         [
             'malHizmet'         =>  'Danışmanlık Ücreti',
@@ -76,15 +77,21 @@ try {
         ]
     ];
 
+    // Gib Portal Bağlantısı
     $gib = (new Gib())
             ->setTestCredentials('33333310', '1')
             ->login();
 
+    // Faturayı Oluştur
     if ($gib->createDraft($invoice)) {
         echo $invoice['faturaUuid'];
     }
 
-    dd($invoice);
+    // Oluşturulan Son Faturayı Gib Portal'dan Getir
+    dd($gib->getLastDocument(), false);
+
+    // Gib Portal Oturumunu Sonlandırma
+    $gib->logout();
 
 } catch(FaturaException $e){
     

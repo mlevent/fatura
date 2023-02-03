@@ -34,14 +34,16 @@ class Gib
     ];
 
     /**
-     * @var string|array
+     * @var array
      */
-    protected string|array $uuid;
+    protected array $column  = [];
+    protected array $filters = [];
+    protected array $limit   = [];
 
     /**
-     * @var boolean
+     * @var string
      */
-    protected bool $sortByDesc = false;
+    protected string $lastId = '';
     
     /**
      * @var integer
@@ -49,11 +51,14 @@ class Gib
     protected int $rowCount = 0;
 
     /**
-     * @var array
+     * @var boolean
      */
-    protected array $column  = [],
-                    $filters = [],
-                    $limit   = [];
+    protected bool $sortByDesc = false;
+
+    /**
+     * @var string|array
+     */
+    protected string|array $uuid;
 
     /**
      * __construct
@@ -301,11 +306,12 @@ class Gib
     /**
      * createDraft
      */
-    public function createDraft(ModelInterface|array $modelData): bool
+    public function createDraft(ModelInterface|array $data): bool
     {
-        $modelData = $modelData instanceof ModelInterface 
-            ? $modelData->export() 
-            : $modelData;
+        if ($data instanceof ModelInterface) {
+            $this->setLastId($data->getUuid());
+            $data = $data->export();
+        }
 
         $requestPath = match ($this->documentType) {
             DocumentType::Invoice             => ['EARSIV_PORTAL_FATURA_OLUSTUR', 'RG_BASITFATURA'],
@@ -314,11 +320,11 @@ class Gib
         };
 
         $response = new Client($this->getGateway('dispatch'), 
-            $this->setParams($requestPath, $modelData)
+            $this->setParams($requestPath, $data)
         );
 
         if (!str_contains($response->object('data'), 'başarıyla')) {
-            throw new ApiException($response->object('data'), $modelData, $response);
+            throw new ApiException($response->object('data'), $data, $response);
         }
         return true;
     }
@@ -342,7 +348,7 @@ class Gib
             ])
         );
         if (preg_match('/(\d+)/', $response->get('data'), $affectedRow)) {
-            $this->setRowCount((int) $affectedRow[1]); 
+            $this->setRowCount((int)$affectedRow[1]); 
             return true;
         }
         return false;
@@ -375,7 +381,7 @@ class Gib
         $lastDocument = $this->onlyCurrent()
                              ->setLimit(1)
                              ->sortDesc()
-                             ->getAll('01/01/2020', curdate('d/m/Y'));
+                             ->getAll(curdate('d/m/Y', '-1 year'), curdate('d/m/Y'));
                              
         return $lastDocument 
             ? $this->getDocument($lastDocument[0]['ettn']) 
@@ -408,6 +414,28 @@ class Gib
             'belgeTip'   => $this->documentType->value,
             'cmd'        => 'EARSIV_PORTAL_BELGE_INDIR'
         ]);
+    }
+
+    /**
+     * saveToDisk
+     *
+     * @param  string         $uuid
+     * @param  string|null    $dirName
+     * @param  string|null    $fileName
+     * @return string|boolean
+     */
+    public function saveToDisk(string $uuid, string $dirName = null, string $fileName = null): string|bool
+    {
+        $saveDir = realpath($dirName ?? '.' . DIRECTORY_SEPARATOR);
+        $fullDir = join(DIRECTORY_SEPARATOR, [$saveDir, $fileName ?? $uuid]) . '.zip';
+
+        if (!$saveDir) {
+            throw new InvalidArgumentException("Geçersiz dosya yolu: {$dirName}");
+        }
+        if (file_put_contents($fullDir, file_get_contents($this->getDownloadURL($uuid)))) {
+            return $fullDir;
+        }
+        return false;
     }
 
     /**
@@ -597,6 +625,22 @@ class Gib
     public function rowCount(): int
     {
         return $this->rowCount;
+    }
+
+    /**
+     * setLastId
+     */
+    protected function setLastId(string $uuid): void
+    {
+        $this->lastId = $uuid;
+    }
+
+    /**
+     * lastId
+     */
+    public function lastId(): string
+    {
+        return $this->lastId;
     }
 
     /**

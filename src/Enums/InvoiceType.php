@@ -6,12 +6,13 @@ namespace Mlevent\Fatura\Enums;
 
 enum InvoiceType: string
 {
-    case Satis        = 'SATIS';
-    case Iade         = 'IADE';
-    case Tevkifat     = 'TEVKIFAT';
-    case Istisna      = 'ISTISNA';
-    case OzelMatrah   = 'OZELMATRAH';
-    case IhracKayitli = 'IHRACKAYITLI';
+    case Satis            = 'SATIS';
+    case Iade             = 'IADE';
+    case Tevkifat         = 'TEVKIFAT';
+    case Istisna          = 'ISTISNA';
+    case OzelMatrah       = 'OZELMATRAH';
+    case IhracKayitli     = 'IHRACKAYITLI';
+    case KonaklamaVergisi = 'KONAKLAMAVERGISI';
 
     /**
      * alias
@@ -21,12 +22,13 @@ enum InvoiceType: string
     public function alias(): string
     {
         return match ($this) {
-            self::Satis        => 'Satış',
-            self::Iade         => 'İade',
-            self::Tevkifat     => 'Tevkifat',
-            self::Istisna      => 'İstisna',
-            self::OzelMatrah   => 'Özel Matrah',
-            self::IhracKayitli => 'İhraç Kayıtlı',
+            self::Satis            => 'Satış',
+            self::Iade             => 'İade',
+            self::Tevkifat         => 'Tevkifat',
+            self::Istisna          => 'İstisna',
+            self::OzelMatrah       => 'Özel Matrah',
+            self::IhracKayitli     => 'İhraç Kayıtlı',
+            self::KonaklamaVergisi => 'Konaklama Vergisi',
         };
     }
 

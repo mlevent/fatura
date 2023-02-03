@@ -32,7 +32,7 @@ abstract class AbstractModel implements ModelInterface
     /**
      * @var array
      */
-    public array $malHizmetTable;
+    public array $malHizmetListe;
 
     /**
      * @var string
@@ -49,6 +49,11 @@ abstract class AbstractModel implements ModelInterface
      */
     public string $saat;
 
+    /**
+     * __constuct
+     *
+     * @return void
+     */
     public function __constuct()
     {
         if ($this->uuid) {
@@ -75,10 +80,18 @@ abstract class AbstractModel implements ModelInterface
             $this->saat = curdate('H:i:s');
         }
 
-        if (!$this->isImported() && $items = $this->getItems()) {
-            $this->clearItems()->addItem(...array_map(
-                fn ($item) => new (substr(get_called_class(), 0, -5) . 'ItemModel')(...$item), $items
-            ));
+        /** 
+         * Ana model üzerinden mal/hizmet ekleme/import etme
+         * importFromApi statik metoduyla import edilen mal/hizmet bilgisi içerisinde vergi bilgileri olabileceğinden modele gönderilmez
+         */
+        if (!$this->isImportedSafe() && $items = $this->getItems()) {
+            $this->clearItems()->addItem(...array_map(function ($item) {
+                $itemModelName = (substr(get_called_class(), 0, -5) . 'ItemModel');
+                if ($this->isImportedFromModel()) {
+                    return $itemModelName::import($item);
+                }
+                return new $itemModelName(...$item);
+            }, $items));
         }
     }
 
@@ -101,9 +114,9 @@ abstract class AbstractModel implements ModelInterface
     public function getItems(bool $toExport = false): array
     {
         if ($toExport) {
-            return array_map(fn($item) => $item instanceof ItemModelInterface ? $item->export() : $item, $this->malHizmetTable);
+            return array_map(fn($item) => $item instanceof ItemModelInterface ? $item->export() : $item, $this->malHizmetListe);
         }
-        return $this->malHizmetTable;
+        return $this->malHizmetListe;
     }
 
     /**
@@ -115,12 +128,12 @@ abstract class AbstractModel implements ModelInterface
     protected function setItems(ItemModelInterface ...$items): void
     {
         foreach ($items as $item) {
-            $this->malHizmetTable[] = $item->prepare($this);
+            $this->malHizmetListe[] = $item->prepare($this);
         }
 
-        // İçe aktarılan veriye yeni öğe eklendiyse
-        if ($this->isImportedClean()) {
-            $this->malHizmetTable = array_values(
+        // İçe aktarılan veriye yeni öğe eklendiyse yalnızca model ile oluşturulan öğeleri kullan
+        if ($this->isImportedSafe() && $this->isImportedClean()) {
+            $this->malHizmetListe = array_values(
                 array_filter($this->getItems(), function ($item) {
                     return $item instanceof ItemModelInterface;
                 })
@@ -141,7 +154,7 @@ abstract class AbstractModel implements ModelInterface
      */
     protected function clearItems(): self
     {
-        $this->malHizmetTable = [];
+        $this->malHizmetListe = [];
         return $this;
     }
 

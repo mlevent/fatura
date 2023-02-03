@@ -22,6 +22,8 @@ try {
         echo "{$gib->rowCount()} adet belge silindi!";
     }
 
+    $gib->logout();
+
 } catch(FaturaException $e){
     
     dd($e->getMessage(), false);

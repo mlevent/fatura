@@ -5,10 +5,10 @@ use Mlevent\Fatura\Gib;
 
 try {
 
-    $gib = new Gib;
-    $gib->testMode()->login('33333310', '1');
+    $gib = (new Gib())->setTestCredentials('33333310', '1')
+                      ->login();
 
-    $documents = $gib->onlyUnsigned()                                     // imzalanmamış belgeler
+    $documents = $gib//->onlyUnsigned()                                     // imzalanmamış belgeler
                      //->onlySigned()                                     // imzalanmış belgeler
                      //->onlyDeleted()                                    // silinmiş belgeler
                      //->onlyInvoice()                                    // faturalar
@@ -24,6 +24,8 @@ try {
                      //->getAllIssuedToMe('01/11/2022', '30/11/2022')     // adınıza düzenlenen belgeler
                      ->getAll('01/11/2022', '30/11/2022');                // düzenlenen belgeler
    
+    $gib->logout();
+
     dd($documents);
 
 } catch(FaturaException $e){

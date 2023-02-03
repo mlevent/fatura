@@ -32,7 +32,7 @@ class SelfEmployedReceiptModel extends AbstractModel
         public string   $vergiDairesi      = '',
         public string   $aciklama          = '',
         public bool     $kdvTahakkukIcin   = false,
-        public array    $malHizmetTable    = [],
+        public array    $malHizmetListe    = [],
         public float    $brutUcret         = 0,
         public float    $gvStopajTutari    = 0,
         public float    $netUcretTutari    = 0,
@@ -107,7 +107,7 @@ class SelfEmployedReceiptModel extends AbstractModel
         return $this->keyMapper(
             array_merge($this->toArray(), $this->getTotals(), [
                 'paraBirimi'     => $this->paraBirimi->name,
-                'malHizmetTable' => $this->getItems(true),
+                'malHizmetListe' => $this->getItems(true),
             ]
         ));
     }
@@ -125,7 +125,7 @@ class SelfEmployedReceiptModel extends AbstractModel
             'aliciSoyadi'       => 'soyadi',
             'aliciUnvan'        => 'unvan',
             'adres'             => 'bulvarCaddeSokak',
-            'malHizmetTable'    => 'serbestTable',
+            'malHizmetListe'    => 'serbestTable',
             'dovizKuru'         => 'kur',
             'brutUcret'         => 'brtUcret',
             'gvStopajTutari'    => 'gvStpjTtari',

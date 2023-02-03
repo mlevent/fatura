@@ -4,6 +4,19 @@ declare(strict_types=1);
 
 use NumberToWords\NumberToWords;
 
+if (!function_exists('create_uuid')) {
+
+    /**
+     * create_uuid
+     *
+     * @return string
+     */
+    function create_uuid(): string
+    {
+        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex(random_bytes(16)), 4));
+    }
+}
+
 if (!function_exists('amount_format')) {
 
     /**
@@ -68,12 +81,16 @@ if (!function_exists('curdate')) {
     /**
      * curdate
      *
-     * @param  string $format
+     * @param  string      $format
+     * @param  string|null $modify
      * @return string
      */
-    function curdate(string $format): string
+    function curdate(string $format, string $modify = null): string
     {
         $date = new DateTime('now', new DateTimeZone('Europe/Istanbul'));
+        if ($modify) {
+            $date->modify($modify);
+        }
         return $date->format($format);
     }
 }

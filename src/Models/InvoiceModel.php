@@ -48,8 +48,8 @@ class InvoiceModel extends AbstractModel
         public string      $eposta                   = '',
         public string      $websitesi                = '',
         public string      $vergiDairesi             = '',
-        public array       $iadeTable                = [],
-        public array       $malHizmetTable           = [],
+        public array       $iadeListe                = [],
+        public array       $malHizmetListe           = [],
         public string      $not                      = '',
         public float       $matrah                   = 0,
         public float       $malHizmetToplamTutari    = 0,
@@ -65,6 +65,12 @@ class InvoiceModel extends AbstractModel
 
         if ($this->paraBirimi != Currency::TRY && !$this->dovizKuru)
             throw new InvalidArgumentException('Kur bilgisi belirtilmedi.', $this);
+
+        if ($returnItems = $this->getReturnItems()) {
+            $this->addReturnItem(...array_map(function ($item) {
+                return new InvoiceReturnItemModel(...$item);
+            }, $returnItems));
+        }
     }
     
     /**
@@ -89,10 +95,20 @@ class InvoiceModel extends AbstractModel
     {
         if ($this->faturaTipi == InvoiceType::Iade) {
             foreach ($items as $item) {
-                $this->iadeTable[] = $item->toArray(); 
+                $this->iadeListe[] = $item->toArray(); 
             }
         }
         return $this;
+    }
+
+    /**
+     * getReturnItems
+     *
+     * @return array
+     */
+    public function getReturnItems(): array
+    {
+        return $this->iadeListe;
     }
 
     /**
@@ -103,10 +119,16 @@ class InvoiceModel extends AbstractModel
     protected function calculateTotals(): void
     {
         // Toplamlar
-        $this->toplamIskonto         = array_column_sum($this->getItems(), 'iskontoTutari');
         $this->malHizmetToplamTutari = array_column_sum($this->getItems(), 'fiyat');
         $this->matrah                = array_column_sum($this->getItems(), 'malHizmetTutari');
         $this->hesaplananKdv         = array_column_sum($this->getItems(), 'kdvTutari');
+
+        // İskonto
+        $this->toplamIskonto = abs(
+            array_column_sum($this->getItems(), 'iskontoTutari', fn($item) => $item->iskontoTipi == 'İskonto')
+            -
+            array_column_sum($this->getItems(), 'iskontoTutari', fn($item) => $item->iskontoTipi == 'Arttırım')
+        );
 
         // Vergiler toplamı (KDV + stopaj vergiler hariç vergi toplami)
         $this->vergilerToplami = $this->hesaplananKdv + array_column_sum($this->getTaxes(), 'amount', 
@@ -148,21 +170,12 @@ class InvoiceModel extends AbstractModel
      */
     public function export(): array
     {
-        // İskonto
-        if (!$this->isImported()) {
-            $this->toplamIskonto = abs(
-                array_column_sum($this->getItems(), 'iskontoTutari', fn($item) => !$item->iskontoTipi)
-                -
-                array_column_sum($this->getItems(), 'iskontoTutari', fn($item) => $item->iskontoTipi)
-            );
-        }
-        
         return $this->keyMapper(
             array_merge($this->toArray(), $this->getTotals(), [
                 'hangiTip'       => $this->hangiTip->value,
                 'faturaTipi'     => $this->faturaTipi->value,
                 'paraBirimi'     => $this->paraBirimi->name,
-                'malHizmetTable' => $this->getItems(true),
+                'malHizmetListe' => $this->getItems(true),
             ]
         ));
     }
@@ -179,6 +192,8 @@ class InvoiceModel extends AbstractModel
             'tarih'                 => 'faturaTarihi',
             'dovizKuru'             => 'dovzTLkur',
             'adres'                 => 'bulvarcaddesokak',
+            'iadeListe'             => 'iadeTable',
+            'malHizmetListe'        => 'malHizmetTable',
             'hesaplananKdv'         => 'hesaplanankdv',
             'malHizmetToplamTutari' => 'malhizmetToplamTutari',
         ];

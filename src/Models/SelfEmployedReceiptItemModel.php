@@ -8,12 +8,14 @@ use Mlevent\Fatura\Exceptions\InvalidArgumentException;
 use Mlevent\Fatura\Interfaces\ItemModelInterface;
 use Mlevent\Fatura\Interfaces\ModelInterface;
 use Mlevent\Fatura\Traits\ArrayableTrait;
+use Mlevent\Fatura\Traits\ImportableTrait;
 use Mlevent\Fatura\Traits\MapableTrait;
 use Mlevent\Fatura\Traits\NewableTrait;
 
 class SelfEmployedReceiptItemModel implements ItemModelInterface
 {
     use ArrayableTrait,
+        ImportableTrait,
         MapableTrait,
         NewableTrait;
 
@@ -24,7 +26,7 @@ class SelfEmployedReceiptItemModel implements ItemModelInterface
     public function __construct(
         public string $neIcinAlindigi,
         public float  $brutUcret,
-        public int    $kdvOrani,
+        public float  $kdvOrani,
         public int    $gvStopajOrani    = 0,
         public float  $netUcret         = 0,
         public int    $kdvTevkifatOrani = 0,
@@ -35,25 +37,29 @@ class SelfEmployedReceiptItemModel implements ItemModelInterface
             throw new InvalidArgumentException('Geçersiz KDV oranı.', $this);
         }
 
-        // Stopaj Tutarı
-        $this->gvStopajTutari = $this->gvStopajTutari
-            ?: percentage($this->brutUcret, $this->gvStopajOrani);
+        // İçe aktarıldıysa hesaplama
+        if (!$this->isImported()) {
 
-        // Net Ücret
-        $this->netUcret = $this->netUcret 
-            ?: $this->brutUcret - $this->gvStopajTutari;
+            // Stopaj Tutarı
+            $this->gvStopajTutari = $this->gvStopajTutari
+                ?: percentage($this->brutUcret, $this->gvStopajOrani);
 
-        // Kdv Tutarı
-        $this->kdvTutari = $this->kdvTutari
-            ?: percentage($this->brutUcret, $this->kdvOrani);
+            // Net Ücret
+            $this->netUcret = $this->netUcret 
+                ?: $this->brutUcret - $this->gvStopajTutari;
 
-        // Kdv Tevkifat Tutarı
-        $this->kdvTevkifatTutari = $this->kdvTevkifatTutari
-            ?: percentage($this->kdvTutari, $this->kdvTevkifatOrani);
-        
-        // Net Alınan
-        $this->netAlinan = $this->netAlinan 
-            ?: $this->netUcret + $this->kdvTutari - $this->kdvTevkifatTutari;
+            // Kdv Tutarı
+            $this->kdvTutari = $this->kdvTutari
+                ?: percentage($this->brutUcret, $this->kdvOrani);
+
+            // Kdv Tevkifat Tutarı
+            $this->kdvTevkifatTutari = $this->kdvTevkifatTutari
+                ?: percentage($this->kdvTutari, $this->kdvTevkifatOrani);
+            
+            // Net Alınan
+            $this->netAlinan = $this->netAlinan 
+                ?: $this->netUcret + $this->kdvTutari - $this->kdvTevkifatTutari;
+        }
     }
 
     /**
