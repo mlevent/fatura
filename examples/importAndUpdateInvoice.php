@@ -1,49 +1,33 @@
 <?php declare(strict_types=1); error_reporting(E_ALL); require dirname(__DIR__).'/vendor/autoload.php';
 
-use Mlevent\Fatura\Enums\Unit;
 use Mlevent\Fatura\Exceptions\FaturaException;
 use Mlevent\Fatura\Gib;
-use Mlevent\Fatura\Models\InvoiceItemModel;
 use Mlevent\Fatura\Models\InvoiceModel;
 
 try {
 
+    // Gib Portal Bağlantısı
     $gib = (new Gib())
             ->setTestCredentials('33333310', '1')
             ->login();
 
-    $invoice = $gib->getDocument('39bff2da-5edc-11ed-b6bd-0050563e6fb2');
+    // Güncellenecek Faturayı Gib Portal'dan Getir
+    $invoice = $gib->getDocument('8f6fc032-a295-11ed-a6dc-62cb0e66eff6');
 
-    $invoice = InvoiceModel::import(array_merge($invoice, [
-        'aliciAdi' => 'Seymen',
-        'adres'    => 'Muhabbet Sk.',
-    ]));
+    // Veriyi Modele Aktar (Öğeleri Modelden Bağımsız İçe Aktarır)
+    $invoice = InvoiceModel::safeImport($invoice);
 
-    dd($invoice->export());
+    // Güncellenecek Alanlar
+    $invoice->aliciAdi    = 'Walter';
+    $invoice->aliciSoyadi = 'Bishop';
 
-    $invoice->addItem(
-        InvoiceItemModel::new(
-            malHizmet  : 'Muhtelif Oyuncak',
-            miktar     : 1,
-            birim      : Unit::Adet,
-            birimFiyat : 144.52,
-            kdvOrani   : 18,
-        ),
-    );
-
-    $invoice->addItem(
-        InvoiceItemModel::new(
-            malHizmet  : 'Muhtelif Oyuncak',
-            miktar     : 2,
-            birim      : Unit::Adet,
-            birimFiyat : 12.52,
-            kdvOrani   : 18,
-        ),
-    );
-
+    // Faturayı Güncelle
     if ($gib->createDraft($invoice)) {
         echo $invoice->getUuid();
     }
+
+    // Gib Portal Oturumunu Sonlandırma
+    $gib->logout();
 
 } catch(FaturaException $e){
     

@@ -8,15 +8,15 @@ use Mlevent\Fatura\Exceptions\FaturaException;
 use Mlevent\Fatura\Gib;
 use Mlevent\Fatura\Models\InvoiceItemModel;
 use Mlevent\Fatura\Models\InvoiceModel;
+use Mlevent\Fatura\Models\InvoiceReturnItemModel;
 
 try {
-
-    //die();
     
-    $invoice = InvoiceModel::new(
-        faturaTipi      : InvoiceType::Satis,
-        dovizKuru       : 18.65,
+    // Fatura Detayları
+    $invoice = new InvoiceModel(
+        faturaTipi      : InvoiceType::Iade,
         paraBirimi      : Currency::USD,
+        dovizKuru       : 18.65,
         tarih           : date('d/m/Y'),
         saat            : date('H:m:s'),
         vknTckn         : '11111111111',
@@ -30,35 +30,42 @@ try {
         ulke            : 'Türkiye',
     );
 
+    // Mal/Hizmet Detayları
     $invoice->addItem(
-        InvoiceItemModel::new(
+        (new InvoiceItemModel(
             malHizmet    : 'Muhtelif Oyuncak',
             miktar       : 2,
             birim        : Unit::Adet,
             birimFiyat   : 309.87,
             kdvOrani     : 18,
-            iskontoTipi  : true,
-            iskontoOrani : 12,
-        )->addTax(Tax::Damga, 21)
-         ->addTax(Tax::OTV1Liste, 0, 52.33),
-        InvoiceItemModel::new(
-            malHizmet    : 'Muhtelif Kırtasiye',
-            miktar       : 7,
-            birim        : Unit::Adet,
-            birimFiyat   : 36.43,
-            kdvOrani     : 8,
-            iskontoOrani : 22,
-        )->addTax(Tax::OTV1Liste, 0, 11.22)
-         ->addTax(Tax::MeraFonu, 14)
+            iskontoOrani : 20,
+        ))->addTax(Tax::Damga,    20)
+          ->addTax(Tax::MeraFonu, 10)
     );
 
+    // İade Faturası İçin İadeye Konu Faturalar
+    $invoice->addReturnItem(
+        new InvoiceReturnItemModel(
+            faturaNo        : 'GIB2022000001416',
+            duzenlenmeTarihi: '31/12/2022'
+        )
+    );
+
+    // Gib Portal Bağlantısı
     $gib = (new Gib())
             ->setTestCredentials('33333310', '1')
             ->login();
 
+    // Faturayı Oluştur
     if ($gib->createDraft($invoice)) {
         echo $invoice->getUuid();
     }
+
+    // Oluşturulan Son Faturayı Gib Portal'dan Getir
+    dd($gib->getLastDocument(), false);
+
+    // Gib Portal Oturumunu Sonlandırma
+    $gib->logout();
 
 } catch(FaturaException $e){
     

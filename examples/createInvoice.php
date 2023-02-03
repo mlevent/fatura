@@ -1,18 +1,13 @@
 <?php declare(strict_types=1); error_reporting(E_ALL); require dirname(__DIR__).'/vendor/autoload.php';
 
-use Mlevent\Fatura\Enums\Currency;
-use Mlevent\Fatura\Enums\InvoiceType;
-use Mlevent\Fatura\Enums\Unit;
 use Mlevent\Fatura\Exceptions\FaturaException;
 use Mlevent\Fatura\Gib;
-use Mlevent\Fatura\Models\InvoiceItemModel;
 use Mlevent\Fatura\Models\InvoiceModel;
 
 try {
 
-    $invoiceDetails = [
-        'faturaTipi'      => InvoiceType::Satis,
-        'paraBirimi'      => Currency::TRY,
+    // Fatura Detayları
+    $invoice = [
         'tarih'           => date('d/m/Y'),
         'saat'            => date('H:m:s'),
         'vknTckn'         => '11111111111',
@@ -26,38 +21,41 @@ try {
         'ulke'            => 'Türkiye',
     ];
     
-    $invoiceItems = [
+    // Mal/Hizmet Detayları
+    $invoice['malHizmetListe'] = [
         [
-            'malHizmet'  => 'Muhtelif Oyuncak',
-            'birim'      => Unit::Adet,
-            'birimFiyat' => 124.52,
-            'miktar'     => 1,
-            'kdvOrani'   => 18,
+            'malHizmet'    => 'Muhtelif Oyuncak',
+            'birimFiyat'   => 124.52,
+            'miktar'       => 1,
+            'kdvOrani'     => 18,
+            'iskontoOrani' => 10,
         ],
         [
             'malHizmet'  => 'Muhtelif Kırtasiye',
-            'birim'      => Unit::Adet,
             'birimFiyat' => 17.56,
             'miktar'     => 3,
             'kdvOrani'   => 8,
         ]
     ];
 
-    $invoice = InvoiceModel::new($invoiceDetails);
+    // Veriyi Modele Aktar (Tüm Toplamlar Otomatik Hesaplanır)
+    $invoice = InvoiceModel::new($invoice);
 
-    $invoice->addItem(...array_map(
-        fn ($item) => InvoiceItemModel::new($item), 
-    $invoiceItems));
-
+    // Gib Portal Bağlantısı
     $gib = (new Gib())
             ->setTestCredentials('33333310', '1')
             ->login();
 
+    // Faturayı Oluştur
     if ($gib->createDraft($invoice)) {
         echo $invoice->getUuid();
     }
 
-    dd($invoice->getTotals());
+    // Oluşturulan Son Faturayı Gib Portal'dan Getir
+    dd($gib->getLastDocument(), false);
+
+    // Gib Portal Oturumunu Sonlandırma
+    $gib->logout();
 
 } catch(FaturaException $e){
     

@@ -149,43 +149,60 @@ Satış faturası oluşturabilmek için, **faturaTipi** `InvoiceType::Satis` gö
 ```php
 use Mlevent\Fatura\Enums\Currency;
 use Mlevent\Fatura\Enums\InvoiceType;
-use Mlevent\Fatura\Enums\Tax;
 use Mlevent\Fatura\Enums\Unit;
 use Mlevent\Fatura\Gib;
 use Mlevent\Fatura\Models\InvoiceModel;
 use Mlevent\Fatura\Models\InvoiceItemModel;
 
 // Fatura detayları
-$invoice = InvoiceModel::new(
-    //uuid'         : '04e17398-468d-11ed-b3cb-4ccc6ae28384',
-    //belgeNumarasi': 'GIB2022000000003',
-    tarih           : '20/10/2022',
-    saat            : '23:50:48',
-    paraBirimi      : Currency::USD,
-    dovizKuru       : 18.56,
-    faturaTipi      : InvoiceType::Satis,
-    vknTckn         : '11111111111',
-    aliciUnvan      : 'BISHOPOĞLU İNŞAAT MALZEMELERİ SAN. TİC. LTD. ŞTİ.',
-    vergiDairesi    : 'Nilüfer Vd.',
-    aliciAdi        : 'Walter',
-    aliciSoyadi     : 'Bishopoğlu',
-    mahalleSemtIlce : 'Nilüfer',
-    sehir           : 'Bursa',
-    ulke            : 'Türkiye',
+$invoice = new InvoiceModel(
+    tarih            : '20/10/2022',       // ☑️ Opsiyonel @string      @default=(dd/mm/yyyy)
+    saat             : '23:50:48',         // ☑️ Opsiyonel @string      @default=(hh/mm/ss)
+    paraBirimi       : Currency::USD,      // ☑️ Opsiyonel @Currency    @default=Currency::TRY
+    dovizKuru        : 18.56,              // ☑️ Opsiyonel @float       @default=0
+    faturaTipi       : InvoiceType::Satis, // ☑️ Opsiyonel @InvoiceType @default=InvoiceType::Satis
+    vknTckn          : '11111111111',      // ✴️ Zorunlu   @string
+    vergiDairesi     : '',                 // ✅ Opsiyonel @string
+    aliciUnvan       : '',                 // ✅ Opsiyonel @string
+    aliciAdi         : 'Mert',             // ✴️ Zorunlu   @string
+    aliciSoyadi      : 'Levent',           // ✴️ Zorunlu   @string
+    mahalleSemtIlce  : 'Nilüfer',          // ✴️ Zorunlu   @string
+    sehir            : 'Bursa',            // ✴️ Zorunlu   @string
+    ulke             : 'Türkiye',          // ✴️ Zorunlu   @string
+    adres            : '',                 // ✅ Opsiyonel @string
+    siparisNumarasi  : '',                 // ✅ Opsiyonel @string
+    siparisTarihi    : '',                 // ✅ Opsiyonel @string
+    irsaliyeNumarasi : '',                 // ✅ Opsiyonel @string
+    irsaliyeTarihi   : '',                 // ✅ Opsiyonel @string
+    fisNo            : '',                 // ✅ Opsiyonel @string
+    fisTarihi        : '',                 // ✅ Opsiyonel @string
+    fisSaati         : '',                 // ✅ Opsiyonel @string
+    fisTipi          : '',                 // ✅ Opsiyonel @string
+    zRaporNo         : '',                 // ✅ Opsiyonel @string
+    okcSeriNo        : '',                 // ✅ Opsiyonel @string
+    binaAdi          : '',                 // ✅ Opsiyonel @string
+    binaNo           : '',                 // ✅ Opsiyonel @string
+    kapiNo           : '',                 // ✅ Opsiyonel @string
+    kasabaKoy        : '',                 // ✅ Opsiyonel @string
+    postaKodu        : '',                 // ✅ Opsiyonel @string
+    tel              : '',                 // ✅ Opsiyonel @string
+    fax              : '',                 // ✅ Opsiyonel @string
+    eposta           : '',                 // ✅ Opsiyonel @string
+    not              : '',                 // ✅ Opsiyonel @string
 );
 
 // Ürün/Hizmetler
 $invoice->addItem(
-    InvoiceItemModel::new(
-        malHizmet   : 'Çimento',
-        miktar      : 3,
-        birim       : Unit::Ton,
-        birimFiyat  : 1259,
-        kdvOrani    : 18,
-        iskontoOrani: 25,
-    )->addTax(Tax::ElkHavagazTuketim, 10) // %10 Elektrik Havagaz Tüketim Vergisi
-     ->addTax(Tax::Damga,             15) // %15 Damga Vergisi
-     ->addTax(Tax::GVStopaj,          20) // %20 Gelir Vergisi Stopajı
+    new InvoiceItemModel(
+        malHizmet     : 'Çimento',  // ✴️ Zorunlu   @string
+        miktar        : 3,          // ✴️ Zorunlu   @float
+        birim         : Unit::M3,   // ☑️ Opsiyonel @Unit @default=Unit::Adet
+        birimFiyat    : 1259,       // ✴️ Zorunlu   @float
+        kdvOrani      : 18,         // ✴️ Zorunlu   @float
+        iskontoOrani  : 25,         // ✅ Opsiyonel @float
+        iskontoTipi   : 'Arttırım', // ☑️ Opsiyonel @string @default=İskonto
+        iskontoNedeni : '',         // ✅ Opsiyonel @string
+    )
 );
 
 $gib = (new Gib)->login('333333054', '******');
@@ -215,9 +232,6 @@ $invoice->addReturnItem(
         duzenlenmeTarihi: '31/12/2022'
     )
 );
-
-// Ürün/Hizmetler
-$invoice->addItem(...);
 ```
 
 ### Tevkifat
@@ -226,14 +240,14 @@ Tevkifatlı fatura oluşturabilmek için, **faturaTipi** `InvoiceType::Tevkifat`
 
 ```php
 // Fatura detayları
-$invoice = InvoiceModel::new(
+$invoice = new InvoiceModel(
     faturaTipi: InvoiceType::Tevkifat,
     ...
 );
 
 // Ürün/Hizmetler
 $invoice->addItem(
-    InvoiceItemModel::new(
+    new InvoiceItemModel(
         tevkifatKodu: 613, // 613 - Çevre, Bahçe ve Bakım Hizmetleri [KDVGUT-(I/C-2.1.3.2.11)]
         ...
     )
@@ -261,14 +275,14 @@ Array
 
 ```php
 // Fatura detayları
-$invoice = InvoiceModel::new(
+$invoice = new InvoiceModel(
     faturaTipi: InvoiceType::Istisna,
     ...
 );
 
 // Ürün/Hizmetler
 $invoice->addItem(
-    InvoiceItemModel::new(
+    new InvoiceItemModel(
         gtip: '080810100000',
         ...
     )
@@ -281,14 +295,14 @@ $invoice->addItem(
 
 ```php
 // Fatura detayları
-$invoice = InvoiceModel::new(
+$invoice = new InvoiceModel(
     faturaTipi: InvoiceType::OzelMatrah,
     ...
 );
 
 // Ürün/Hizmetler
 $invoice->addItem(
-    InvoiceItemModel::new(
+    new InvoiceItemModel(
         ...
         ozelMatrahNedeni: 805, // 805 - Altından Mamül veya Altın İçeren Ziynet Eşyaları İle Sikke Altınların Teslimi
         ozelMatrahTutari: 1250,
@@ -315,14 +329,13 @@ Array
 Müstahsil makbuzu ile çalışılacaksa, Gib sınıfı başlatılırken `DocumentType::ProducerReceipt` başlangıç parametresi olarak gönderilmelidir.
 
 ```php
-use Mlevent\Fatura\Enums\Tax;
 use Mlevent\Fatura\Enums\Unit;
 use Mlevent\Fatura\Gib;
 use Mlevent\Fatura\Models\ProducerReceiptModel;
 use Mlevent\Fatura\Models\ProducerReceiptItemModel;
 
 // Müstahsil Makbuzu Detayları
-$producerReceipt = ProducerReceiptModel::new(
+$producerReceipt = new ProducerReceiptModel(
     tarih       : '20/10/2022',  // ☑️ Opsiyonel @string @default=(dd/mm/yyyy)
     saat        : '23:50:48',    // ☑️ Opsiyonel @string @default=(hh/mm/ss)
     vknTckn     : '11111111111', // ✴️ Zorunlu   @string
@@ -336,7 +349,7 @@ $producerReceipt = ProducerReceiptModel::new(
 
 // Ürün/Hizmetler
 $producerReceipt->addItem(
-    ProducerReceiptItemModel::new(
+    new ProducerReceiptItemModel(
         malHizmet    : 'Yazılım Hizmeti', // ✴️ Zorunlu @string
         miktar       : 3,                 // ✴️ Zorunlu @float
         birim        : Unit::Saat,        // ✴️ Zorunlu @Unit
@@ -359,14 +372,13 @@ $service->logout();
 Serbest meslek makbuzu ile çalışılacaksa, Gib sınıfı başlatılırken `DocumentType::SelfEmployedReceipt` başlangıç parametresi olarak gönderilmelidir.
 
 ```php
-use Mlevent\Fatura\Enums\Tax;
 use Mlevent\Fatura\Enums\Unit;
 use Mlevent\Fatura\Gib;
 use Mlevent\Fatura\Models\SelfEmployedReceiptModel;
 use Mlevent\Fatura\Models\SelfEmployedReceiptItemModel;
 
 // Serbest Meslek Makbuzu
-$selfEmployedReceipt = SelfEmployedReceiptModel::new(
+$selfEmployedReceipt = new SelfEmployedReceiptModel(
     tarih          : '20/10/2022',  // ☑️ Opsiyonel @string   @default=(dd/mm/yyyy)
     saat           : '14:25:34',    // ☑️ Opsiyonel @string   @default=(hh/mm/ss)
     paraBirimi     : Currency::USD, // ☑️ Opsiyonel @Currency @default=Currency::TRY
@@ -390,10 +402,10 @@ $selfEmployedReceipt = SelfEmployedReceiptModel::new(
 );
 
 $selfEmployedReceipt->addItem(
-    SelfEmployedReceiptItemModel::new(
+    new SelfEmployedReceiptItemModel(
         neIcinAlindigi  : 'Dava Vekilliği', // ✴️ Zorunlu   @string
         brutUcret       : 100,              // ✴️ Zorunlu   @float
-        kdvOrani        : 18,               // ✴️ Zorunlu   @int
+        kdvOrani        : 18,               // ✴️ Zorunlu   @float
         gvStopajOrani   : 0,                // ✅ Opsiyonel @int
         kdvTevkifatOrani: 0,                // ✅ Opsiyonel @int
     )
@@ -491,7 +503,7 @@ Fatura oluşturulurken `faturaUuid` ve `belgeNumarasi` belirtildiyse; portalda b
 
 ```php
 // Fatura detayları
-$invoice = InvoiceModel::new(
+$invoice = new InvoiceModel(
     uuid          : '04e17398-468d-11ed-b3cb-4ccc6ae28384',
     belgeNumarasi : 'GIB2022000000003',
     ...
@@ -506,16 +518,13 @@ use Mlevent\Fatura\Models\InvoiceModel;
 
 $gib = (new Gib)->login('333333054', '******');
 
-$invoice = InvoiceModel::import(
+$invoice = InvoiceModel::safeImport(
     $gib->getDocument('c4e9e0a2-4788-11ed-bbd4-4ccc6ae28384')
 );
 
 $invoice->aliciAdi    = 'Nureddin';
 $invoice->aliciSoyadi = 'Nebati';
 $invoice->adres       = 'Bankalar Cd. Faiz Sk. No:128/A';
-
-// Güncellenecek faturaya yeni öğe eklenirse, içe aktarılmış öğeler silinir
-$invoice->addItem(...);
 
 // Faturayı güncelle
 if ($gib->createDraft($invoice)) {
@@ -735,10 +744,8 @@ $userData = $gib->getUserData();
 use Mlevent\Fatura\Gib;
 use Mlevent\Fatura\Models\UserDataModel;
 
-$gib = new Gib;
-
-$gib->setTestCredentials()
-    ->login();
+$gib = (new Gib)->setTestCredentials()
+                ->login();
 
 $userData = UserDataModel::import($gib->getUserData());
 

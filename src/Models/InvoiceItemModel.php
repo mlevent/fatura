@@ -32,10 +32,10 @@ class InvoiceItemModel implements ItemModelInterface
         public string $malHizmet,
         public float  $miktar,
         public float  $birimFiyat,
-        public int    $kdvOrani,
+        public float  $kdvOrani,
         public Unit   $birim            = Unit::Adet,
         public float  $fiyat            = 0,
-        public bool   $iskontoTipi      = false,
+        public string $iskontoTipi      = 'İskonto', // İskonto veya Arttırım 
         public float  $iskontoOrani     = 0,
         public float  $iskontoTutari    = 0,
         public string $iskontoNedeni    = '',
@@ -49,6 +49,11 @@ class InvoiceItemModel implements ItemModelInterface
         // KDV oranı
         if (!in_array($this->kdvOrani, [0,1,8,18])) {
             throw new InvalidArgumentException('Geçersiz KDV oranı.', $this);
+        }
+
+        // İskonto Tipi
+        if (!in_array($this->iskontoTipi, ['İskonto', 'Arttırım'])) {
+            throw new InvalidArgumentException('Geçersiz iskonto tipi.', $this);
         }
 
         // İçe aktarıldıysa hesaplama
@@ -68,7 +73,7 @@ class InvoiceItemModel implements ItemModelInterface
                 if (!$this->iskontoTutari) {
                     $this->malHizmetTutari = $this->fiyat;
                 } else {
-                    $this->malHizmetTutari = (!$this->iskontoTipi 
+                    $this->malHizmetTutari = ($this->iskontoTipi == 'İskonto' 
                         ? $this->fiyat - $this->iskontoTutari 
                         : $this->fiyat + $this->iskontoTutari);
                 }
@@ -182,8 +187,7 @@ class InvoiceItemModel implements ItemModelInterface
     {
         return $this->keyMapper(
             array_merge($this->toArray(), $this->getTotals(), $this->exportTaxes(), [
-                'birim'       => $this->birim->value,
-                'iskontoTipi' => !$this->iskontoTipi ? 'İskonto' : 'Arttırım',
+                'birim' => $this->birim->value,
             ]
         ));
     }

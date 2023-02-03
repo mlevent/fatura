@@ -19,7 +19,7 @@ class ProducerReceiptModel extends AbstractModel
         public string $saat                     = '',
         public string $sehir                    = '',
         public string $websitesi                = '',
-        public array  $malHizmetTable           = [],
+        public array  $malHizmetListe           = [],
         public string $not                      = '',
         public string $teslimTarihi             = '',
         public float  $malHizmetToplamTutari    = 0,
@@ -84,7 +84,7 @@ class ProducerReceiptModel extends AbstractModel
     {
         return $this->keyMapper(
             array_merge($this->toArray(), $this->getTotals(), [
-                'malHizmetTable' => $this->getItems(true),
+                'malHizmetListe' => $this->getItems(true),
             ])
         );
     }
@@ -98,7 +98,7 @@ class ProducerReceiptModel extends AbstractModel
     {
         return [
             'teslimTarihi'          => 'teslimTarih',
-            'malHizmetTable'        => 'mustahsilTable',
+            'malHizmetListe'        => 'mustahsilTable',
             'malHizmetToplamTutari' => 'malhizmetToplamTutari',
         ];
     }

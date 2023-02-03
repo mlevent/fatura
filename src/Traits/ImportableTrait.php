@@ -21,7 +21,7 @@ trait ImportableTrait
     /**
      * @var boolean
      */
-    public static bool $isImportedFromUser = false;
+    public static bool $isImportedSafe = false;
 
     /**
      * modelMap
@@ -59,6 +59,17 @@ trait ImportableTrait
     }
 
     /**
+     * safeImport
+     *
+     * @param array $data
+     */
+    public static function safeImport(array $data)
+    {
+        static::$isImportedSafe = true;
+        return self::import($data);
+    }
+
+    /**
      * import
      *
      * @param array $data
@@ -67,17 +78,6 @@ trait ImportableTrait
     {
         static::$isImported = true;
         return new (get_called_class())(...self::modelMap($data));
-    }
-
-    /**
-     * use
-     *
-     * @param array $data
-     */
-    public static function use(array $data)
-    {
-        static::$isImportedFromUser = true;
-        return self::import($data);
     }
 
     /**
@@ -111,22 +111,22 @@ trait ImportableTrait
     }
 
     /**
-     * isImportedFromApi
+     * isImportedFromModel
      *
      * @return boolean
      */
-    public function isImportedFromApi(): bool
+    public function isImportedFromModel(): bool
     {
-        return self::$isImported && !self::$isImportedFromUser;
+        return self::$isImported && !self::$isImportedSafe;
     }
 
     /**
-     * isImportedFromUser
+     * isImportedSafe
      *
      * @return boolean
      */
-    public function isImportedFromUser(): bool
+    public function isImportedSafe(): bool
     {
-        return self::$isImportedFromUser;
+        return self::$isImportedSafe;
     }
 }

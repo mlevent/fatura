@@ -4,6 +4,19 @@ declare(strict_types=1);
 
 use NumberToWords\NumberToWords;
 
+if (!function_exists('create_uuid')) {
+
+    /**
+     * create_uuid
+     *
+     * @return string
+     */
+    function create_uuid(): string
+    {
+        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex(random_bytes(16)), 4));
+    }
+}
+
 if (!function_exists('amount_format')) {
 
     /**

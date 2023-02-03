@@ -1,58 +1,97 @@
 <?php declare(strict_types=1); error_reporting(E_ALL); require dirname(__DIR__).'/vendor/autoload.php';
 
-use Mlevent\Fatura\Enums\Unit;
 use Mlevent\Fatura\Exceptions\FaturaException;
 use Mlevent\Fatura\Gib;
-use Mlevent\Fatura\Models\InvoiceItemModel;
-use Mlevent\Fatura\Models\InvoiceModel;
-use Ramsey\Uuid\Uuid;
 
 try {
 
+    // Fatura Detayları
     $invoice = [
-        'tarih'                    => date('d/m/Y'),
+        'faturaUuid'               => create_uuid(),
+        'belgeNumarasi'            => '',
+        'faturaTarihi'             => date('d/m/Y'),
         'saat'                     => date('H:m:s'),
+        'paraBirimi'               => 'TRY',
+        'dovzTLkur'                => 0,
+        'faturaTipi'               => 'SATIS',
+        'hangiTip'                 => '5000/30000',
+        'siparisNumarasi'          => '',
+        'siparisTarihi'            => '',
+        'irsaliyeNumarasi'         => '',
+        'irsaliyeTarihi'           => '',
+        'fisNo'                    => '',
+        'fisTarihi'                => '',
+        'fisSaati'                 => '',
+        'fisTipi'                  => '',
+        'zRaporNo'                 => '',
+        'okcSeriNo'                => '',
         'vknTckn'                  => '11111111111',
-        'vergiDairesi'             => 'Nilüfer',
-        'faturaTipi'               => 'TEVKIFAT',
+        'aliciUnvan'               => '',
         'aliciAdi'                 => 'MERT',
         'aliciSoyadi'              => 'LEVENT',
-        'adres'                    => 'Sancı Sk. Lalezar Apt. No:44/A',
+        'bulvarcaddesokak'         => 'Sancı Sk. Lalezar Apt. No:44/A',
+        'binaAdi'                  =>  '', 
+        'binaNo'                   =>  '', 
+        'kapiNo'                   =>  '', 
+        'kasabaKoy'                =>  '', 
         'mahalleSemtIlce'          => 'Nilüfer',
         'sehir'                    => 'Bursa',
+        'postaKodu'                => '',
         'ulke'                     => 'Türkiye',
-        'iadeTable'                => [
-            [
-                'faturaNo'          =>  'GIB2022000000003',
-                'duzenlenmeTarihi'  => '12/10/1988'
-            ]
-        ],
-        'malHizmetTable'           => [
-            [
-                'malHizmet'         => 'Danışmanlık Ücreti',
-                'miktar'            => 1,
-                'birim'             => 'C62',
-                'birimFiyat'        => 2500,
-                'kdvOrani'          => 18,
-            ]
+        'tel'                      => '',
+        'fax'                      => '',
+        'eposta'                   => '',
+        'websitesi'                => '',
+        'vergiDairesi'             => '',
+        'iadeTable'                => [],
+        'malHizmetTable'           => [],
+        'tip'                      => 'İskonto',
+        'matrah'                   => 1500,
+        'malhizmetToplamTutari'    => 1500,
+        'toplamIskonto'            => 0,
+        'hesaplanankdv'            => 270,
+        'vergilerToplami'          => 270,
+        'vergilerDahilToplamTutar' => 1770,
+        'toplamMasraflar'          => 0,
+        'odenecekTutar'            => 1770,
+        'not'                      => '',
+    ];
+
+    // Mal/Hizmet Detayları
+    $invoice['malHizmetTable'] = [
+        [
+            'malHizmet'         =>  'Danışmanlık Ücreti',
+            'miktar'            =>  1,
+            'birim'             =>  'HUR',
+            'birimFiyat'        =>  1500,
+            'fiyat'             =>  1500,
+            'iskontoArttm'      =>  'İskonto',
+            'iskontoOrani'      =>  0,
+            'iskontoTutari'     =>  0,
+            'iskontoNedeni'     =>  '',
+            'malHizmetTutari'   =>  1500,
+            'kdvOrani'          =>  18,
+            'kdvTutari'         =>  270,
+            'vergininKdvTutari' =>  0,
+            'ozelMatrahTutari'  =>  0,
         ]
     ];
 
-    //$invoice['malHizmetTable'][0] = InvoiceItemModel::import($invoice['malHizmetTable'][0]);
-    
-    dd(InvoiceModel::use($invoice)->export());
-
-    //dd(new invoiceModel(...$invoice));
-
+    // Gib Portal Bağlantısı
     $gib = (new Gib())
             ->setTestCredentials('33333310', '1')
             ->login();
 
+    // Faturayı Oluştur
     if ($gib->createDraft($invoice)) {
         echo $invoice['faturaUuid'];
     }
 
-    dd($invoice);
+    // Oluşturulan Son Faturayı Gib Portal'dan Getir
+    dd($gib->getLastDocument(), false);
+
+    // Gib Portal Oturumunu Sonlandırma
+    $gib->logout();
 
 } catch(FaturaException $e){
     

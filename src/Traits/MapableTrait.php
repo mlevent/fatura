@@ -11,7 +11,8 @@ trait MapableTrait
     /**
      * keyMapper
      *
-     * @param  array $data
+     * @param  array   $data
+     * @param  boolean $flip
      * @return array
      */
     protected function keyMapper(array $data, bool $flip = false): array

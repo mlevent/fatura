@@ -6,20 +6,32 @@ use Mlevent\Fatura\Models\UserDataModel;
 
 try {
 
-    $gib = new Gib;
-    $gib->setTestCredentials('33333310', '1')->login();
+    // Gib Portal Bağlantısı
+    $gib = (new Gib())
+            ->setTestCredentials('33333310', '1')
+            ->login();
 
-    $userData = UserDataModel::import($gib->getUserData());
+    // Kullanıcı Bilgilerini Gib Portal'dan Getir
+    $user = $gib->getUserData();
 
-    $userData->apartmanAdi  = 'Lale Apartmanı';
-    $userData->kapiNo       = '12';
-    $userData->vergiDairesi = 'Bursa';
+    // Veriyi Modele Aktar
+    $user = UserDataModel::import($user);
 
-    if ($gib->updateUserData($userData)) {
+    // Güncellenecek Alanlar
+    $user->apartmanAdi  = 'Lale Apartmanı';
+    $user->kapiNo       = '12';
+    $user->vergiDairesi = 'Bursa';
+
+    // Kullanıcı Bilgilerini Güncelle
+    if ($gib->updateUserData($user)) {
         echo 'Bilgiler başarıyla güncellendi.';
     }
 
-    dd($gib->getUserData());
+    // Güncel Kullanıcı Bilgileri
+    dd($gib->getUserData(), false);
+
+    // Gib Portal Oturumunu Sonlandırma
+    $gib->logout();
 
 } catch(FaturaException $e){
     

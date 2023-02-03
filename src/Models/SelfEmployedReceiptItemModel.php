@@ -26,7 +26,7 @@ class SelfEmployedReceiptItemModel implements ItemModelInterface
     public function __construct(
         public string $neIcinAlindigi,
         public float  $brutUcret,
-        public int    $kdvOrani,
+        public float  $kdvOrani,
         public int    $gvStopajOrani    = 0,
         public float  $netUcret         = 0,
         public int    $kdvTevkifatOrani = 0,
