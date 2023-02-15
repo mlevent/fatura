@@ -168,14 +168,13 @@ class InvoiceItemModel implements ItemModelInterface
      */
     public function getTotals(): array
     {
-        return [
-            'birimFiyat'       => amount_format($this->birimFiyat),
-            'fiyat'            => amount_format($this->fiyat),
-            'iskontoTutari'    => amount_format($this->iskontoTutari),
-            'malHizmetTutari'  => amount_format($this->malHizmetTutari),
-            'kdvTutari'        => amount_format($this->kdvTutari),
-            'ozelMatrahTutari' => amount_format($this->ozelMatrahTutari),
-        ];
+        return array_merge(['birimFiyat' => $this->birimFiyat], map_with_amount_format([
+            'fiyat'            => $this->fiyat,
+            'iskontoTutari'    => $this->iskontoTutari,
+            'malHizmetTutari'  => $this->malHizmetTutari,
+            'kdvTutari'        => $this->kdvTutari,
+            'ozelMatrahTutari' => $this->ozelMatrahTutari,
+        ]));
     }
 
     /**
@@ -186,7 +185,7 @@ class InvoiceItemModel implements ItemModelInterface
     public function export(): array
     {
         return $this->keyMapper(
-            array_merge($this->toArray(), $this->getTotals(), $this->exportTaxes(), [
+            array_merge($this->toArray(), $this->getTotals(), map_with_amount_format($this->exportTaxes()), [
                 'birim' => $this->birim->value,
             ]
         ));

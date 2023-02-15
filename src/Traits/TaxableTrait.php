@@ -116,7 +116,7 @@ trait TaxableTrait
         $taxes = [];
         foreach($this->getTaxes() as $tax) {
             foreach ($this->taxKeyMapper($tax['model'], $lowerFirst) as $i => $v) {
-                $taxes[$v] = amount_format($tax[$i]);
+                $taxes[$v] = $tax[$i];
             }
         }
         return $taxes;

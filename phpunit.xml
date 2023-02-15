@@ -11,7 +11,7 @@
          processIsolation="false"
          stopOnError="false"
          stopOnFailure="false"
-         cacheResult ="false"
+         cacheResult="false"
 >
     <testsuite name="Unit Test">
         <directory>tests</directory>

@@ -83,10 +83,9 @@ class ProducerReceiptItemModel implements ItemModelInterface
      */
     public function getTotals(): array
     {
-        return [
-            'birimFiyat'      => amount_format($this->birimFiyat),
-            'malHizmetTutari' => amount_format($this->malHizmetTutari),
-        ];
+        return array_merge(['birimFiyat' => $this->birimFiyat], map_with_amount_format([
+            'malHizmetTutari' => $this->malHizmetTutari,
+        ]));
     }
 
     /**
@@ -96,7 +95,7 @@ class ProducerReceiptItemModel implements ItemModelInterface
      */
     public function export(): array
     {
-        return $this->keyMapper(array_merge($this->toArray(), $this->getTotals(), $this->exportTaxes(true), [
+        return $this->keyMapper(array_merge($this->toArray(), $this->getTotals(), map_with_amount_format($this->exportTaxes(true)), [
             'birim' => $this->birim->value,
         ]));
     }

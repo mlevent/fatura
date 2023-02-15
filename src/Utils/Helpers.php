@@ -31,6 +31,20 @@ if (!function_exists('amount_format')) {
     }
 }
 
+if (!function_exists('map_with_amount_format')) {
+
+    /**
+     * map_with_amount_format
+     *
+     * @param  array $array
+     * @return array
+     */
+    function map_with_amount_format(array $array): array
+    {
+        return array_map(fn ($item) => amount_format($item), $array);
+    }
+}
+
 if (!function_exists('number_to_words')) {
 
     /**
@@ -53,11 +67,31 @@ if (!function_exists('array_column_sum')) {
      * @param  array         $array
      * @param  string        $key
      * @param  callable|null $callback
+     * @param  boolean       $amountFormat
      * @return float
      */
-    function array_column_sum(array $array, string $key, ?callable $callback = null): float
+    function array_column_sum(array $array, string $key, ?callable $callback = null, bool $amountFormat = false): float
     {
-        return array_sum(array_column(($callback ? array_filter($array, $callback) : $array), $key));
+        $arrayColumn = array_column(($callback ? array_filter($array, $callback) : $array), $key);
+        return array_sum($amountFormat 
+            ? map_with_amount_format($arrayColumn) 
+            : $arrayColumn);
+    }
+}
+
+if (!function_exists('array_column_sum_with_amount_format')) {
+
+    /**
+     * array_column_sum_with_amount_format
+     *
+     * @param  array         $array
+     * @param  string        $key
+     * @param  callable|null $callback
+     * @return float
+     */
+    function array_column_sum_with_amount_format(array $array, string $key, ?callable $callback = null): float
+    {
+        return array_column_sum($array, $key, $callback, true);
     }
 }
 
