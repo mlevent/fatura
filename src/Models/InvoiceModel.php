@@ -119,19 +119,19 @@ class InvoiceModel extends AbstractModel
     protected function calculateTotals(): void
     {
         // Toplamlar
-        $this->malHizmetToplamTutari = array_column_sum($this->getItems(), 'fiyat');
-        $this->matrah                = array_column_sum($this->getItems(), 'malHizmetTutari');
-        $this->hesaplananKdv         = array_column_sum($this->getItems(), 'kdvTutari');
+        $this->malHizmetToplamTutari = array_column_sum_with_amount_format($this->getItems(), 'fiyat');
+        $this->matrah                = array_column_sum_with_amount_format($this->getItems(), 'malHizmetTutari');
+        $this->hesaplananKdv         = array_column_sum_with_amount_format($this->getItems(), 'kdvTutari');
 
         // İskonto
         $this->toplamIskonto = abs(
-            array_column_sum($this->getItems(), 'iskontoTutari', fn($item) => $item->iskontoTipi == 'İskonto')
+            array_column_sum_with_amount_format($this->getItems(), 'iskontoTutari', fn($item) => $item->iskontoTipi == 'İskonto')
             -
-            array_column_sum($this->getItems(), 'iskontoTutari', fn($item) => $item->iskontoTipi == 'Arttırım')
+            array_column_sum_with_amount_format($this->getItems(), 'iskontoTutari', fn($item) => $item->iskontoTipi == 'Arttırım')
         );
 
         // Vergiler toplamı (KDV + stopaj vergiler hariç vergi toplami)
-        $this->vergilerToplami = $this->hesaplananKdv + array_column_sum($this->getTaxes(), 'amount', 
+        $this->vergilerToplami = $this->hesaplananKdv + array_column_sum_with_amount_format($this->getTaxes(), 'amount', 
             fn ($tax) => !$tax['model']->isStoppage()
         );
 
@@ -139,7 +139,7 @@ class InvoiceModel extends AbstractModel
         $this->vergilerDahilToplamTutar = $this->matrah + $this->vergilerToplami;
 
         // Ödenecek tutar (Vergiler dahil toplam - stopaj vergiler toplami)
-        $this->odenecekTutar = $this->vergilerDahilToplamTutar - array_column_sum($this->getTaxes(), 'amount', 
+        $this->odenecekTutar = $this->vergilerDahilToplamTutar - array_column_sum_with_amount_format($this->getTaxes(), 'amount', 
             fn ($tax) => $tax['model']->isStoppage() || $tax['model']->isWithholding()
         );
     }
@@ -151,16 +151,16 @@ class InvoiceModel extends AbstractModel
      */
     public function getTotals(): array
     {
-        return [
-            'matrah'                   => amount_format($this->matrah),
-            'malHizmetToplamTutari'    => amount_format($this->malHizmetToplamTutari),
-            'toplamIskonto'            => amount_format($this->toplamIskonto),
-            'hesaplananKdv'            => amount_format($this->hesaplananKdv),
-            'vergilerToplami'          => amount_format($this->vergilerToplami),
-            'vergilerDahilToplamTutar' => amount_format($this->vergilerDahilToplamTutar),
-            'toplamMasraflar'          => amount_format($this->toplamMasraflar),
-            'odenecekTutar'            => amount_format($this->odenecekTutar),
-        ];
+        return map_with_amount_format([
+            'matrah'                   => $this->matrah,
+            'malHizmetToplamTutari'    => $this->malHizmetToplamTutari,
+            'toplamIskonto'            => $this->toplamIskonto,
+            'hesaplananKdv'            => $this->hesaplananKdv,
+            'vergilerToplami'          => $this->vergilerToplami,
+            'vergilerDahilToplamTutar' => $this->vergilerDahilToplamTutar,
+            'toplamMasraflar'          => $this->toplamMasraflar,
+            'odenecekTutar'            => $this->odenecekTutar,
+        ]);
     }
 
     /**

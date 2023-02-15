@@ -68,12 +68,12 @@ class SelfEmployedReceiptModel extends AbstractModel
     protected function calculateTotals(): void
     {
         // Toplamlar
-        $this->brutUcret         = array_column_sum($this->getItems(), 'brutUcret');
-        $this->gvStopajTutari    = array_column_sum($this->getItems(), 'gvStopajTutari');
-        $this->netUcretTutari    = array_column_sum($this->getItems(), 'netUcret');
-        $this->kdvTutari         = array_column_sum($this->getItems(), 'kdvTutari');
-        $this->kdvTevkifatTutari = array_column_sum($this->getItems(), 'kdvTevkifatTutari');
-        $this->netAlinanToplam   = array_column_sum($this->getItems(), 'netAlinan');
+        $this->brutUcret         = array_column_sum_with_amount_format($this->getItems(), 'brutUcret');
+        $this->gvStopajTutari    = array_column_sum_with_amount_format($this->getItems(), 'gvStopajTutari');
+        $this->netUcretTutari    = array_column_sum_with_amount_format($this->getItems(), 'netUcret');
+        $this->kdvTutari         = array_column_sum_with_amount_format($this->getItems(), 'kdvTutari');
+        $this->kdvTevkifatTutari = array_column_sum_with_amount_format($this->getItems(), 'kdvTevkifatTutari');
+        $this->netAlinanToplam   = array_column_sum_with_amount_format($this->getItems(), 'netAlinan');
 
         // Tahsil edilen kdv (KDV tutari - KDV tevkifat tutari)
         $this->tahsilEdilenKdv = $this->kdvTutari - $this->kdvTevkifatTutari;
@@ -86,15 +86,15 @@ class SelfEmployedReceiptModel extends AbstractModel
      */
     public function getTotals(): array
     {
-        return [
-            'brutUcret'         => amount_format($this->brutUcret),
-            'netUcretTutari'    => amount_format($this->netUcretTutari),
-            'gvStopajTutari'    => amount_format($this->gvStopajTutari),
-            'kdvTutari'         => amount_format($this->kdvTutari),
-            'kdvTevkifatTutari' => amount_format($this->kdvTevkifatTutari),
-            'tahsilEdilenKdv'   => amount_format($this->tahsilEdilenKdv),
-            'netAlinanToplam'   => amount_format($this->netAlinanToplam),
-        ];
+        return map_with_amount_format([
+            'brutUcret'         => $this->brutUcret,
+            'netUcretTutari'    => $this->netUcretTutari,
+            'gvStopajTutari'    => $this->gvStopajTutari,
+            'kdvTutari'         => $this->kdvTutari,
+            'kdvTevkifatTutari' => $this->kdvTevkifatTutari,
+            'tahsilEdilenKdv'   => $this->tahsilEdilenKdv,
+            'netAlinanToplam'   => $this->netAlinanToplam,
+        ]);
     }
 
     /**

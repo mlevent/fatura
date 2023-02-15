@@ -80,14 +80,14 @@ class SelfEmployedReceiptItemModel implements ItemModelInterface
      */
     public function getTotals(): array
     {
-        return [
-            'brutUcret'         => amount_format($this->brutUcret),
-            'netUcret'          => amount_format($this->netUcret),
-            'gvStopajTutari'    => amount_format($this->gvStopajTutari),
-            'kdvTutari'         => amount_format($this->kdvTutari),
-            'kdvTevkifatTutari' => amount_format($this->kdvTevkifatTutari),
-            'netAlinan'         => amount_format($this->netAlinan),
-        ];
+        return map_with_amount_format([
+            'brutUcret'         => $this->brutUcret,
+            'netUcret'          => $this->netUcret,
+            'gvStopajTutari'    => $this->gvStopajTutari,
+            'kdvTutari'         => $this->kdvTutari,
+            'kdvTevkifatTutari' => $this->kdvTevkifatTutari,
+            'netAlinan'         => $this->netAlinan,
+        ]);
     }
 
     /**

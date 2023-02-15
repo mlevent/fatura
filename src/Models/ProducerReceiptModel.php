@@ -52,13 +52,13 @@ class ProducerReceiptModel extends AbstractModel
     protected function calculateTotals(): void
     {
         // Mal/hizmet toplam
-        $this->malHizmetToplamTutari = array_column_sum($this->getItems(), 'malHizmetTutari');
+        $this->malHizmetToplamTutari = array_column_sum_with_amount_format($this->getItems(), 'malHizmetTutari');
 
         // Vergiler dahil toplam
         $this->vergilerDahilToplamTutar = $this->malHizmetToplamTutari;
 
         // Ödenecek tutar (Vergiler dahil toplam - Vergiler toplam)
-        $this->odenecekTutar = $this->vergilerDahilToplamTutar - array_column_sum($this->getTaxes(), 'amount');
+        $this->odenecekTutar = $this->vergilerDahilToplamTutar - array_column_sum_with_amount_format($this->getTaxes(), 'amount');
     }
 
     /**
@@ -68,11 +68,11 @@ class ProducerReceiptModel extends AbstractModel
      */
     public function getTotals(): array
     {
-        return [
-            'malHizmetToplamTutari'    => amount_format($this->malHizmetToplamTutari),
-            'vergilerDahilToplamTutar' => amount_format($this->vergilerDahilToplamTutar),
-            'odenecekTutar'            => amount_format($this->odenecekTutar),
-        ];
+        return map_with_amount_format([
+            'malHizmetToplamTutari'    => $this->malHizmetToplamTutari,
+            'vergilerDahilToplamTutar' => $this->vergilerDahilToplamTutar,
+            'odenecekTutar'            => $this->odenecekTutar,
+        ]);
     }
 
     /**
