@@ -821,6 +821,8 @@ foreach (Currency::cases() as $currency) {
 
 İletişim için ghergedan@gmail.com adresine e-posta gönderin.
 
+<a href="https://www.buymeacoffee.com/mlevent" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
+
 ---
 
 ☢️ Bu paket vergiye tabi olan mali veri oluşturur. Bu paket nedeniyle oluşabilecek sorunlardan bu paket sorumlu tutulamaz, risk kullanana aittir. Riskli görüyorsanız kullanmayınız.
