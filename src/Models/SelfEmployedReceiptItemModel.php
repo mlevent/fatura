@@ -33,7 +33,7 @@ class SelfEmployedReceiptItemModel implements ItemModelInterface
         public float  $netAlinan        = 0,
     ) {
         // KDV oranı
-        if (!in_array($this->kdvOrani, [0,1,8,18])) {
+        if (!in_array($this->kdvOrani, [0,1,8,10,18,20])) {
             throw new InvalidArgumentException('Geçersiz KDV oranı.', $this);
         }
 

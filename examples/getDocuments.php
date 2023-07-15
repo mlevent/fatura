@@ -8,7 +8,7 @@ try {
     $gib = (new Gib())->setTestCredentials('33333310', '1')
                       ->login();
 
-    $documents = $gib//->onlyUnsigned()                                     // imzalanmamış belgeler
+    $documents = $gib//->onlyUnsigned()                                   // imzalanmamış belgeler
                      //->onlySigned()                                     // imzalanmış belgeler
                      //->onlyDeleted()                                    // silinmiş belgeler
                      //->onlyInvoice()                                    // faturalar

@@ -424,20 +424,19 @@ class Gib
      * @param  string|null    $fileName
      * @return string|boolean
      */
-    public function saveToDisk(string $uuid, string $dirName = null, string $fileName = null): string|bool
+    public function saveToDisk(string $uuid, ?string $dirName = null, ?string $fileName = null): string|bool
     {
         $saveDir = realpath($dirName ?? '.' . DIRECTORY_SEPARATOR);
         $fullDir = join(DIRECTORY_SEPARATOR, [$saveDir, $fileName ?? $uuid]) . '.zip';
+        $options = [
+            'http' => [
+                'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'
+            ]
+        ];
 
         if (!$saveDir) {
             throw new InvalidArgumentException("Geçersiz dosya yolu: {$dirName}");
         }
-        
-        $options = array(
-            'http' => array(
-            'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'
-            )
-        );
         if (file_put_contents($fullDir, file_get_contents($this->getDownloadURL($uuid), false, stream_context_create($options)))) {
             return $fullDir;
         }

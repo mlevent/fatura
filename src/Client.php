@@ -40,6 +40,7 @@ class Client
                     $this->response = $response;
                 }
             }
+            //if (!$this->response || (isset($this->response['data']) && !is_array($this->response['data'])) || isset($this->response['error']) || !empty($this->response['data']['hata'])) {
             if (!$this->response || isset($this->response['error']) || !empty($this->response['data']['hata'])) {
                 throw new ApiException('İstek başarısız oldu.', $parameters, $this->response, $request->getStatusCode());
             }
