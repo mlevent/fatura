@@ -50,7 +50,7 @@ trait ImportableTrait
             // içe aktarılan veride eksik olan ancak modelde default bulunan parametreler
             } else {
                 if (!$param->isDefaultValueAvailable()) {
-                    throw new InvalidArgumentException('Modele eksik parametre iletildi.', $data, $constructParameters);
+                    throw new InvalidArgumentException("Parametre eksik gönderildi: {$param->name}", $data, $constructParameters);
                 }
                 $newData[$param->name] = $param->getDefaultValue();
             }
