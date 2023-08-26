@@ -59,11 +59,11 @@ trait ImportableTrait
     }
 
     /**
-     * safeImport
+     * importFromApi
      *
      * @param array $data
      */
-    public static function safeImport(array $data)
+    public static function importFromApi(array $data)
     {
         static::$isImportedSafe = true;
         return self::import($data);

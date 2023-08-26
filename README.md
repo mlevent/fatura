@@ -17,8 +17,8 @@
 
 Bu paket GİB'e tabi şahıs şirketi ya da şirket hesapları ile çalışır ve bu kişiler adına resmi fatura/makbuz oluşturur. GİB e-Arşiv portala tarayıcınızdan giriş yapmak için aşağıdaki linkleri kullanabilirsiniz;
 
--   https://earsivportaltest.efatura.gov.tr/login.jsp
--   https://earsivportal.efatura.gov.tr/intragiris.html
+- https://earsivportaltest.efatura.gov.tr/login.jsp
+- https://earsivportal.efatura.gov.tr/intragiris.html
 
 > Kullanıcı kodu ve parola bilgilerini muhasebecinizden ya da GİB - İnteraktif Vergi Dairesi'nden edinebilirsiniz.
 
@@ -34,34 +34,34 @@ composer require mlevent/fatura
 
 ## 🎉 Özellikler
 
--   [Api Bağlantısı](#api-bağlantısı)
--   [Belge Oluşturma](#belge-oluşturma)
-    -   [e-Fatura](#e-fatura)
-        -   [Satış](#satış)
-        -   [İade](#i̇ade)
-        -   [Tevkifat](#tevkifat)
-        -   [İstisna](#i̇stisna)
-        -   [Özel Matrah](#özel-matrah)
-    -   [e-Müstahsil](#e-müstahsil)
-    -   [e-SMM](#e-smm)
--   [Belge Güncelleme](#belge-günceleme)
--   [Belge Silme](#belge-silme)
--   [Belge İmzalama](#belge-i̇mzalama)
-    -   [Sms ile İmzalama](#sms-ile-i̇mzalama)
--   [Belge Listeleme](#belge-listeleme)
-    -   [Düzenlenen Belgeler](#düzenlenen-belgeler)
-    -   [Adıma Düzenlenen Belgeler](#adıma-düzenlenen-belgeler)
-    -   [Belge Detayları](#belge-detayları)
-    -   [HTML Çıktı Alma](#html-çıktı-alma)
-    -   [Belge İndirme Adresi](#belge-i̇ndirme-adresi)
--   [Vergiler](#vergi-ekleme)
-    -   [Vergi Ekleme](#vergi-ekleme)
-    -   [Vergi Listesi](#vergi-listesi)
-    -   [Vergiler ve Toplamlar](#vergiler-ve-toplamlar)
--   [İptal/İtiraz Talepleri](#i̇ptali̇tiraz-talepleri)
--   [GİB Profil Bilgileri](#gi̇b-profil-bilgileri)
--   [Mükellef Sorgulama](#mükellef-bilgileri)
--   [Birimler](#birimler)
+- [Api Bağlantısı](#api-bağlantısı)
+- [Belge Oluşturma](#belge-oluşturma)
+  - [e-Fatura](#e-fatura)
+    - [Satış](#satış)
+    - [İade](#i̇ade)
+    - [Tevkifat](#tevkifat)
+    - [İstisna](#i̇stisna)
+    - [Özel Matrah](#özel-matrah)
+  - [e-Müstahsil](#e-müstahsil)
+  - [e-SMM](#e-smm)
+- [Belge Güncelleme](#belge-günceleme)
+- [Belge Silme](#belge-silme)
+- [Belge İmzalama](#belge-i̇mzalama)
+  - [Sms ile İmzalama](#sms-ile-i̇mzalama)
+- [Belge Listeleme](#belge-listeleme)
+  - [Düzenlenen Belgeler](#düzenlenen-belgeler)
+  - [Adıma Düzenlenen Belgeler](#adıma-düzenlenen-belgeler)
+  - [Belge Detayları](#belge-detayları)
+  - [HTML Çıktı Alma](#html-çıktı-alma)
+  - [Belge İndirme Adresi](#belge-i̇ndirme-adresi)
+- [Vergiler](#vergi-ekleme)
+  - [Vergi Ekleme](#vergi-ekleme)
+  - [Vergi Listesi](#vergi-listesi)
+  - [Vergiler ve Toplamlar](#vergiler-ve-toplamlar)
+- [İptal/İtiraz Talepleri](#i̇ptali̇tiraz-talepleri)
+- [GİB Profil Bilgileri](#gi̇b-profil-bilgileri)
+- [Mükellef Sorgulama](#mükellef-bilgileri)
+- [Birimler](#birimler)
 
 ## 🔗Api Bağlantısı
 
@@ -132,11 +132,11 @@ Model kullanırken named arguments (adlandırılmış değişkenler) veya dizile
 
 Kütüphaneyi kullanarak aşağıdaki fatura türleri ile çalışabilirsiniz;
 
--   Satış
--   İade
--   Tevkifat
--   İstisna
--   Özel Matrah
+- Satış
+- İade
+- Tevkifat
+- İstisna
+- Özel Matrah
 
 > Döviz cinsinden fatura düzenlemek için modelde `paraBirimi` ve `dovizKuru` parametreleri kullanılmalıdır.
 
@@ -420,6 +420,24 @@ if ($service->createDraft($producerReceipt)) {
 $service->logout();
 ```
 
+## Not Ekleme
+
+Belgelere not eklemek için, `setNote` metodunu kullanabilirsiniz. Not eklenmemiş belgelere otomatik olarak, "yazı ile toplam ödenecek tutar" not olarak eklenir.
+
+```php
+use Mlevent\Fatura\Models\InvoiceModel;
+use Mlevent\Fatura\Models\InvoiceItemModel;
+
+$invoice = new InvoiceModel(...);
+
+$invoice->addItem(
+    new InvoiceItemModel(...),
+    new InvoiceItemModel(...),
+);
+
+$invoice->setNote(number_to_words($invoice->getPaymentTotal())); // ALTI YÜZ OTUZ DÖRT TÜRK LİRASI ALTMIŞ BİR KURUŞ
+```
+
 ## 💸Vergi Ekleme
 
 Belgedeki hizmetlere `addTax` metodunu kullanarak vergi ekleyebilirsiniz. Vergiler doğrudan belgeye eklenemez, yalnızca öğe modeli üzerinden her bir öğeye ayrı ayrı eklenebilir.
@@ -518,7 +536,7 @@ use Mlevent\Fatura\Models\InvoiceModel;
 
 $gib = (new Gib)->login('333333054', '******');
 
-$invoice = InvoiceModel::safeImport(
+$invoice = InvoiceModel::importFromApi(
     $gib->getDocument('c4e9e0a2-4788-11ed-bbd4-4ccc6ae28384')
 );
 

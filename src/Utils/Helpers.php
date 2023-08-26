@@ -55,7 +55,7 @@ if (!function_exists('number_to_words')) {
      */
     function number_to_words(int|float $number): string
     {
-        return NumberToWords::transformCurrency('tr', (int) number_format($number, 2, '', ''), 'TRY');
+        return mb_strtoupper(strtr(NumberToWords::transformCurrency('tr', (int) number_format($number, 2, '', ''), 'TRY'), ['i' => 'İ', 'ı' => 'I']));
     }
 }
 

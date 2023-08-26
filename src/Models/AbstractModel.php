@@ -141,9 +141,16 @@ abstract class AbstractModel implements ModelInterface
             self::$isImportedDirty = true;
         }
 
-        // Veri içe aktarılmadıysa toplamları hesapla
+        // Veri içe aktarılmadıysa yapılacak işlemler
         if (!$this->isImported() || $this->isImportedDirty()) {
+
+            // Toplamları hesapla
             $this->calculateTotals();
+
+            // Not Ekle
+            $this->setNote(
+                number_to_words($this->getPaymentTotal())
+            );
         }
     }
 

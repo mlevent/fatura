@@ -15,7 +15,7 @@ try {
     $invoice = $gib->getDocument('8f6fc032-a295-11ed-a6dc-62cb0e66eff6');
 
     // Veriyi Modele Aktar (Öğeleri Modelden Bağımsız İçe Aktarır)
-    $invoice = InvoiceModel::safeImport($invoice);
+    $invoice = InvoiceModel::importFromApi($invoice);
 
     // Güncellenecek Alanlar
     $invoice->aliciAdi    = 'Walter';

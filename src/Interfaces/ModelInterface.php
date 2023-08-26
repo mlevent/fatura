@@ -10,6 +10,8 @@ interface ModelInterface
     public function getItems(): array;
     public function getTaxes(): array;
     public function getTotals(): array;
+    public function getPaymentTotal(): float;
     public function addItem(): self;
+    public function setNote(string $note): self;
     public function export(): array;
 }

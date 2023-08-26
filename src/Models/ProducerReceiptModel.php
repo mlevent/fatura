@@ -76,6 +76,27 @@ class ProducerReceiptModel extends AbstractModel
     }
 
     /**
+     * getPaymentTotal
+     *
+     * @return float
+     */
+    public function getPaymentTotal(): float
+    {
+        return $this->odenecekTutar;
+    }
+
+    /**
+     * setNote
+     *
+     * @return self
+     */
+    public function setNote(string $note): self
+    {
+        $this->not = $note;
+        return $this;
+    }
+
+    /**
      * export
      *
      * @return array

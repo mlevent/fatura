@@ -33,6 +33,7 @@ class ModelTest extends TestCase
 
         $invoice = $invoice->export();
 
+        $this->assertEquals($invoice['not'],                      'İKİ YÜZ ON BİR TÜRK LİRASI YETMİŞ YEDİ KURUŞ');
         $this->assertEquals($invoice['matrah'],                   18);
         $this->assertEquals($invoice['malhizmetToplamTutari'],    20);
         $this->assertEquals($invoice['hesaplanankdv'],            27.54);
@@ -74,8 +75,11 @@ class ModelTest extends TestCase
               ->addTax(Tax::EnerjiFonu, 9)
         );
 
+        $invoice->setNote('İrsaliye Yerine Geçer');
+
         $invoice = $invoice->export();
 
+        $this->assertEquals($invoice['not'],                      'İrsaliye Yerine Geçer');
         $this->assertEquals($invoice['matrah'],                   205.68);
         $this->assertEquals($invoice['malhizmetToplamTutari'],    207.92);
         $this->assertEquals($invoice['toplamIskonto'],            2.24);

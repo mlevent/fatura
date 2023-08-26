@@ -98,6 +98,27 @@ class SelfEmployedReceiptModel extends AbstractModel
     }
 
     /**
+     * getPaymentTotal
+     *
+     * @return float
+     */
+    public function getPaymentTotal(): float
+    {
+        return $this->netAlinanToplam;
+    }
+
+    /**
+     * setNote
+     *
+     * @return self
+     */
+    public function setNote(string $note): self
+    {
+        $this->aciklama = $note;
+        return $this;
+    }
+
+    /**
      * export
      *
      * @return array
