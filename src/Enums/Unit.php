@@ -34,7 +34,7 @@ enum Unit: string
     case M3    = 'MTQ';
     case Kjo   = 'KJO';
     case Clt   = 'CLT';
-    case Ct    = 'Ct';
+    case Ct    = 'CT';
     case Kwh   = 'KWH';
     case Mwh   = 'MWH';
     case Cct   = 'CCT';
@@ -43,7 +43,7 @@ enum Unit: string
     case Lpa   = 'LPA';
     case Kgm2  = 'B32';
     case Ncl   = 'NCL';
-    case Pr    = 'Pr';
+    case Pr    = 'PR';
     case Kmt   = 'R9';
     case Set   = 'SET';
     case T3    = 'T3';
