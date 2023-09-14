@@ -146,11 +146,6 @@ abstract class AbstractModel implements ModelInterface
 
             // Toplamları hesapla
             $this->calculateTotals();
-
-            // Not Ekle
-            $this->setNote(
-                number_to_words($this->getPaymentTotal())
-            );
         }
     }
 
@@ -179,5 +174,20 @@ abstract class AbstractModel implements ModelInterface
             }
         }
         return $taxes;
+    }
+
+    /**
+     * mapItems
+     * 
+     * @return self
+     */
+    public function mapItems(callable $fn): self
+    {
+        $this->malHizmetListe = array_map(function($i, $k) use($fn){
+            return $fn($this, $i, $k);
+        }, $this->malHizmetListe, array_keys($this->malHizmetListe));
+        
+        $this->calculateTotals();
+        return $this;
     }
 }

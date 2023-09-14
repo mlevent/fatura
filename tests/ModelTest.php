@@ -33,7 +33,6 @@ class ModelTest extends TestCase
 
         $invoice = $invoice->export();
 
-        $this->assertEquals($invoice['not'],                      'İKİ YÜZ ON BİR TÜRK LİRASI YETMİŞ YEDİ KURUŞ');
         $this->assertEquals($invoice['matrah'],                   18);
         $this->assertEquals($invoice['malhizmetToplamTutari'],    20);
         $this->assertEquals($invoice['hesaplanankdv'],            27.54);
