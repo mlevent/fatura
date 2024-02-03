@@ -54,6 +54,7 @@ composer require mlevent/fatura
   - [Belge Detayları](#belge-detayları)
   - [HTML Çıktı Alma](#html-çıktı-alma)
   - [Belge İndirme Adresi](#belge-i̇ndirme-adresi)
+  - [Belgeyi Sunucuya Kaydetme](#belgeyi-sunucuya-kaydetme)
 - [Vergiler](#vergi-ekleme)
   - [Vergi Ekleme](#vergi-ekleme)
   - [Vergi Listesi](#vergi-listesi)
@@ -680,6 +681,13 @@ Portal üzerinde kayıtlı belgeye ait indirme adresine ulaşmak için;
 
 ```php
 $gib->getDownloadURL('44ba5b87-81a3-4474-bd0f-27d771fb4064');
+```
+### Belgeyi Sunucuya Kaydetme
+
+Portal üzerinde kayıtlı belgeyi sunucuya kaydetmek için;
+
+```php
+$gib->saveToDisk('44ba5b87-81a3-4474-bd0f-27d771fb4064');
 ```
 
 ## Belge Filtreleme
