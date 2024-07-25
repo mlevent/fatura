@@ -11,9 +11,6 @@ class SelfEmployedReceiptModel extends AbstractModel
 {
     public function __construct(
         public string   $vknTckn,
-        public string   $aliciAdi,
-        public string   $aliciSoyadi,
-        public string   $ulke,
         public string   $uuid              = '',
         public string   $belgeNumarasi     = '',
         public string   $tarih             = '',
@@ -21,6 +18,8 @@ class SelfEmployedReceiptModel extends AbstractModel
         public Currency $paraBirimi        = Currency::TRY,
         public float    $dovizKuru         = 0,
         public string   $aliciUnvan        = '',
+        public string   $aliciAdi          = '',
+        public string   $aliciSoyadi       = '',
         public string   $adres             = '',
         public string   $binaAdi           = '',
         public string   $binaNo            = '',
@@ -28,6 +27,7 @@ class SelfEmployedReceiptModel extends AbstractModel
         public string   $kasabaKoy         = '',
         public string   $mahalleSemtIlce   = '',
         public string   $sehir             = '',
+        public string   $ulke              = '',
         public string   $postaKodu         = '',
         public string   $vergiDairesi      = '',
         public string   $aciklama          = '',
