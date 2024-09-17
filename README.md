@@ -681,7 +681,7 @@ $gib->getHtml('1d78ef40-6491-11ed-a280-4ccc6ae28384');
 
 ### Belge İndirme Adresi
 
-> Belge indirme adresine yalnızca token oluşturduğunuz IP adresi erişebilir. Token sunucuda oluşturulduysa, belge adresi yalnızca sunucuda çalışacaktır. Aksi durumda `Oturum geçersiz, token yok` hatası dönecektir. Belgeyi sunucunuza indirmek için [saveToDisk](#belgeyi-sunucuya-kaydetme) metodonu kullanabilirsiniz. 
+> Belge indirme adresine yalnızca token oluşturduğunuz IP adresi erişebilir. Token sunucuda oluşturulduysa, belgeyi indirmeye yarayan bu link yalnızca sunucuda çalışacaktır. Farklı bir IP adresinden erişilmesi durumunda `Oturum geçersiz, token yok` hatası dönecektir. Belgeyi sunucunuza indirmek için [saveToDisk](#belgeyi-sunucuya-kaydetme) metodonu kullanabilirsiniz. 
 
 Portal üzerinde kayıtlı belgeye ait indirme adresine ulaşmak için;
 
