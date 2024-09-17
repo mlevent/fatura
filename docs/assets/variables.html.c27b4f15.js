@@ -1,1 +1,0 @@
-const e=JSON.parse('{"key":"v-03bf3e0a","path":"/variables.html","title":"⛓️ Parametreler","lang":"en-US","frontmatter":{"title":"⛓️ Parametreler"},"excerpt":"","headers":[{"level":2,"title":"Müstahsil Makbuzu","slug":"mustahsil-makbuzu","link":"#mustahsil-makbuzu","children":[]}],"git":{"updatedTime":null,"contributors":[]},"filePathRelative":"variables.md"}');export{e as data};
