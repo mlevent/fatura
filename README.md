@@ -647,7 +647,7 @@ Array
 
 ### Adıma Düzenlenen Belgeler
 
-> Bu metod artık stabil çalışmıyor. Belli bir tarihten sonra adınıza düzenlenmiş belgeler bir süredir GİB Portal'dan alınamıyor.
+> Bu metod artık stabil çalışmıyor gibi görünüyor. Belli bir tarihten sonra adınıza düzenlenmiş belgeler bir süredir GİB Portal'dan alınamıyor.
 
 İki tarih arasındaki gelen faturaları (GİB portaldaki adıyla Adıma Düzenlenen Belgeler) listeler.
 
