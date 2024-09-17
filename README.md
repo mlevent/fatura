@@ -588,6 +588,8 @@ if ($gib->deleteDraft($setToDelete)) {
 
 ### 📲SMS ile İmzalama
 
+> SMS doğrulama işlemleri test hesaplarıyla gerçekleştirilemez.
+
 SMS doğrulamasına başlamak için `startSmsVerification` yöntemi kullanılmalıdır. Yöntem portalda kayıtlı gsm numarasına bir doğrulama kodu gönderecek ve imzalama işlemi için daha sonra kullanacağınız bir ID döndürecektir.
 
 ```php
@@ -645,6 +647,8 @@ Array
 
 ### Adıma Düzenlenen Belgeler
 
+> Bu metod artık stabil çalışmıyor. Belli bir tarihten sonra adınıza düzenlenmiş belgeler bir süredir GİB Portal'dan alınamıyor.
+
 İki tarih arasındaki gelen faturaları (GİB portaldaki adıyla Adıma Düzenlenen Belgeler) listeler.
 
 ```php
@@ -676,6 +680,8 @@ $gib->getHtml('1d78ef40-6491-11ed-a280-4ccc6ae28384');
 ```
 
 ### Belge İndirme Adresi
+
+> Belge indirme adresine yalnızca token oluşturduğunuz IP adresi erişebilir. Token sunucuda oluşturulduysa, belge adresi yalnızca sunucuda çalışacaktır. Aksi durumda `Oturum geçersiz, token yok` hatası dönecektir. Belgeyi sunucunuza indirmek için [saveToDisk](#belgeyi-sunucuya-kaydetme) metodonu kullanabilirsiniz. 
 
 Portal üzerinde kayıtlı belgeye ait indirme adresine ulaşmak için;
 
