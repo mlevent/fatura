@@ -32,7 +32,7 @@ class ServiceTest extends TestCase
             ->login();
 
         // Documents
-        $documents = $service->getAll('01/01/2022', '01/02/2022');
+        $documents = $service->getAll(curdate('d/m/Y', '-1 month'), curdate('d/m/Y'));
         $this->assertIsArray($documents);
 
         // Document Summary Keys
