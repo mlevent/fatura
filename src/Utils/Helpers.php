@@ -119,7 +119,7 @@ if (!function_exists('curdate')) {
      * @param  string|null $modify
      * @return string
      */
-    function curdate(string $format, string $modify = null): string
+    function curdate(string $format, ?string $modify = null): string
     {
         $date = new DateTime('now', new DateTimeZone('Europe/Istanbul'));
         if ($modify) {
