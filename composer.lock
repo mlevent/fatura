@@ -393,23 +393,23 @@
         },
         {
             "name": "kwn/number-to-words",
-            "version": "2.9.1",
+            "version": "2.10.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/kwn/number-to-words.git",
-                "reference": "0b29195ab64994a5abd24115730aa590c598d468"
+                "reference": "2144ba025d9f6f0ff850049fa43ba3bf47220460"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/kwn/number-to-words/zipball/0b29195ab64994a5abd24115730aa590c598d468",
-                "reference": "0b29195ab64994a5abd24115730aa590c598d468",
+                "url": "https://api.github.com/repos/kwn/number-to-words/zipball/2144ba025d9f6f0ff850049fa43ba3bf47220460",
+                "reference": "2144ba025d9f6f0ff850049fa43ba3bf47220460",
                 "shasum": ""
             },
             "require": {
                 "php": ">=7.4"
             },
             "require-dev": {
-                "phpunit/phpunit": "^9.6.7",
+                "phpunit/phpunit": "^9.6",
                 "squizlabs/php_codesniffer": "^3.7.2"
             },
             "type": "library",
@@ -440,9 +440,9 @@
             ],
             "support": {
                 "issues": "https://github.com/kwn/number-to-words/issues",
-                "source": "https://github.com/kwn/number-to-words/tree/2.9.1"
+                "source": "https://github.com/kwn/number-to-words/tree/2.10.0"
             },
-            "time": "2024-02-24T17:01:19+00:00"
+            "time": "2024-09-18T20:08:07+00:00"
         },
         {
             "name": "psr/http-client",
