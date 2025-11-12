@@ -33,7 +33,9 @@ class Client
         try {
             $request = (new \GuzzleHttp\Client)->request($post ? 'POST' : 'GET', $url, [
                 'headers'     => self::$headers, 
-                'form_params' => $parameters
+                'form_params' => $parameters,
+                'timeout' => 10,
+                'connect_timeout' => 5,
             ]);
             if ($response = json_decode($request->getBody()->getContents(), true)) {
                 if (is_array($response)) {
