@@ -349,12 +349,12 @@ class Gib
      */
     protected function resolveCreatedDraftUuid(array $data): ?string
     {
-        $getLastDocument = $this->getLastDocument('-1 minute');
+        $getLastDocument = $this->getLastDocument('-1 minute', $data['vknTckn'] ?? null);
 
         if (empty($getLastDocument)) {
-            return null;
+            throw new ApiException('Fatura GİB üzerinde oluşturuldu ancak ETTN bilgisi alınamadı.', $data);
         }
-
+        
         return match ($this->documentType) {
             DocumentType::Invoice => $getLastDocument['faturaUuid'] ?? null,
             DocumentType::ProducerReceipt => $getLastDocument['uuid'] ?? null,
@@ -409,12 +409,20 @@ class Gib
     /**
      * getLastDocument
      */
-    public function getLastDocument(string $fromModifier = '-1 year'): array
+    public function getLastDocument(string $fromModifier = '-1 year', ?string $recipientId = null): array
     {
-        $lastDocument = $this->onlyCurrent()
-                             ->setLimit(1)
-                             ->sortDesc()
-                             ->getAll(curdate('d/m/Y', $fromModifier), curdate('d/m/Y'));
+        $query = $this->onlyCurrent();
+
+        if (!empty($recipientId)) {
+            $query->findRecipientId($recipientId);
+        }
+        
+        $lastDocument = $query->setLimit(1)
+                              ->sortDesc()
+                              ->getAll(
+                                    curdate('d/m/Y', $fromModifier), 
+                                    curdate('d/m/Y')
+                                );
                              
         return $lastDocument 
             ? $this->getDocument($lastDocument[0]['ettn']) 
