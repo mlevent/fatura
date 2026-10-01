@@ -4,15 +4,20 @@ declare(strict_types=1);
 
 namespace Mlevent\Fatura;
 
+use GuzzleHttp\Cookie\CookieJar;
 use Mlevent\Fatura\Enums\DocumentType;
 use Mlevent\Fatura\Enums\ObjectionMethod;
 use Mlevent\Fatura\Enums\Type;
 use Mlevent\Fatura\Exceptions\ApiException;
+use Mlevent\Fatura\Exceptions\BadResponseException;
+use Mlevent\Fatura\Exceptions\DraftCorrelationException;
+use Mlevent\Fatura\Exceptions\DraftPreflightException;
 use Mlevent\Fatura\Exceptions\InvalidArgumentException;
 use Mlevent\Fatura\Exceptions\InvalidFormatException;
+use Mlevent\Fatura\Exceptions\SessionExpiredException;
 use Mlevent\Fatura\Interfaces\ModelInterface;
 use Mlevent\Fatura\Models\UserDataModel;
-use Mlevent\Fatura\Utils\FormatValidator;
+use Mlevent\Fatura\Utils\DraftMatcher;
 use Ramsey\Uuid\Uuid;
 
 class Gib
@@ -54,6 +59,9 @@ class Gib
      * @var boolean
      */
     protected bool $sortByDesc = false;
+
+    protected ?CookieJar $cookieJar = null;
+    protected bool $portalReady = false;
 
     /**
      * @var string|array
@@ -123,7 +131,7 @@ class Gib
      */
     public function getTestCredentials(): array
     {
-        $response = new Client($this->getGateway('esign'), [
+        $response = $this->request($this->getGateway('esign'), [
             'assoscmd' => 'kullaniciOner',
             'rtype'    => 'json',
         ]);
@@ -138,6 +146,10 @@ class Gib
      */
     public function setToken(?string $token = null): self
     {
+        if ($this->token !== $token) {
+            $this->cookieJar = null;
+            $this->portalReady = false;
+        }
         $this->token = $token;
         return $this;
     }
@@ -147,7 +159,7 @@ class Gib
      */
     public function getToken(): string
     {
-        return $this->token;
+        return $this->token ?? '';
     }
 
     /**
@@ -181,15 +193,29 @@ class Gib
             $this->setCredentials($username, $password);
         }
 
-        $response = new Client($this->getGateway('login'), [
-            'assoscmd' => $this->testMode ? 'login' : 'anologin',
-            'userid'   => $this->username,
-            'sifre'    => $this->password,
-            'sifre2'   => $this->password,
-            'parola'   => $this->password,
-        ]);
-
-        $this->setToken($response->get('token'));
+        $this->cookieJar = new CookieJar();
+        $this->portalReady = false;
+        $this->token = null;
+        try {
+            $response = $this->request($this->getGateway('login'), [
+                'assoscmd' => $this->testMode ? 'login' : 'anologin',
+                'userid'   => $this->username,
+                'sifre'    => $this->password,
+                'sifre2'   => $this->password,
+                'parola'   => $this->password,
+            ]);
+            $token = $response->get('token');
+            if (!is_string($token) || $token === '') {
+                throw new ApiException('GİB giriş yanıtında token bulunamadı.', null, $response->get());
+            }
+            // Giriş yanıtının çerezleri index.jsp isteğinde de kullanılmalı.
+            $this->token = $token;
+            $this->bootPortalSession();
+        } catch (\Throwable $e) {
+            $this->setToken();
+            $this->cookieJar = null;
+            throw $e;
+        }
         return $this;
     }
     
@@ -198,13 +224,14 @@ class Gib
      */
     public function logout(): bool
     {
-        new Client($this->getGateway('login'), [
-            'assoscmd' => 'logout',
-            'token'    => $this->token,
-        ]);
-
-        $this->setCredentials();
-        $this->setToken();
+        try {
+            $this->request($this->getGateway('login'), ['assoscmd' => 'logout', 'token' => $this->token]);
+        } finally {
+            $this->setCredentials();
+            $this->setToken();
+            $this->cookieJar = null;
+            $this->portalReady = false;
+        }
         return true;
     }
         
@@ -213,11 +240,7 @@ class Gib
      */
     public function getRecipientData(string $taxOrTrId): array
     {
-        $response = new Client($this->getGateway('dispatch'), 
-            $this->setParams(['SICIL_VEYA_MERNISTEN_BILGILERI_GETIR', 'RG_BASITFATURA'], [
-                'vknTcknn' => $taxOrTrId
-            ])
-        );
+        $response = $this->dispatchRead(['SICIL_VEYA_MERNISTEN_BILGILERI_GETIR', 'RG_BASITFATURA'], ['vknTcknn' => $taxOrTrId]);
         return $response->get('data');
     }
         
@@ -226,9 +249,7 @@ class Gib
      */
     public function getUserData(): array
     {
-        $response = new Client($this->getGateway('dispatch'), 
-            $this->setParams(['EARSIV_PORTAL_KULLANICI_BILGILERI_GETIR', 'RG_KULLANICI'])
-        );
+        $response = $this->dispatchRead(['EARSIV_PORTAL_KULLANICI_BILGILERI_GETIR', 'RG_KULLANICI']);
         return $response->get('data');
     }
     
@@ -241,7 +262,7 @@ class Gib
             ? $userData->export() 
             : $userData;
 
-        $response = new Client($this->getGateway('dispatch'), 
+        $response = $this->request($this->getGateway('dispatch'),
             $this->setParams(['EARSIV_PORTAL_KULLANICI_BILGILERI_KAYDET', 'RG_KULLANICI'], $userData)
         );
         return $response->get('data') ? true : false;
@@ -252,9 +273,7 @@ class Gib
      */
     public function getPhoneNumber(): ?string
     {
-        $response = new Client($this->getGateway('dispatch'), 
-            $this->setParams(['EARSIV_PORTAL_TELEFONNO_SORGULA', 'RG_BASITTASLAKLAR'])
-        );
+        $response = $this->dispatchRead(['EARSIV_PORTAL_TELEFONNO_SORGULA', 'RG_BASITTASLAKLAR']);
         return $response->object('data')->telefon ?? null;
     }
 
@@ -266,7 +285,7 @@ class Gib
         if (!$phoneNumber = $this->getPhoneNumber()) {
             return null;
         }
-        $response = new Client($this->getGateway('dispatch'), 
+        $response = $this->request($this->getGateway('dispatch'),
             $this->setParams(['EARSIV_PORTAL_SMSSIFRE_GONDER', 'RG_SMSONAY'], [
                 'CEPTEL'  => $phoneNumber, 
                 'KCEPTEL' => false, 
@@ -288,15 +307,16 @@ class Gib
             ];
         }, $this->setUuid($documents));
 
-        $response = new Client($this->getGateway('dispatch'), 
+        $response = $this->request($this->getGateway('dispatch'),
             $this->setParams(['0lhozfib5410mp', 'RG_SMSONAY'], [
                 'DATA'  => $setToSign,
                 'SIFRE' => $code, 
                 'OID'   => $oid, 
                 'OPR'   => 1, 
-            ])
+            ]), true, ['timeout' => 300]
         );
-        if ($response->object('data')->sonuc === '1') {
+        $data = $response->get('data');
+        if (is_array($data) && in_array($data['sonuc'] ?? null, ['1', 1], true)) {
             $this->setRowCount(sizeof($documents));
             return true;
         }
@@ -309,18 +329,25 @@ class Gib
     public function createDraft(ModelInterface|array $data): bool
     {
         $model = $data instanceof ModelInterface ? $data : null;
-
-        if (!empty($model)) {
-            if ($data->getUuid()) {
-                $this->setLastId($data->getUuid());
-            }
-            $data = $data->export();
-        }
-
+        $data = $model ? $model->export() : $data;
         $isNewDraft = empty($data['belgeNumarasi']);
-
+        $this->setLastId('');
+        $lock = null;
+        $known = [];
         if ($isNewDraft) {
-           unset($data['uuid'], $data['faturaUuid'], $data['ettn']);
+            $model?->setUuid('');
+            unset($data['uuid'], $data['faturaUuid'], $data['ettn']);
+            try {
+                $date = $this->draftDate($data);
+                if (DraftMatcher::matches($data, $data, $this->documentType, '') !== true) {
+                    throw new DraftPreflightException('ETTN eşleştirmesi için alıcı, tarih ve tutar bilgileri gerekli.');
+                }
+                $lock = $this->acquireDraftCreationLock();
+                $known = $this->draftUuids($this->listDocumentSummaries($date, $date));
+            } catch (\Throwable $e) {
+                if (is_resource($lock)) fclose($lock);
+                throw new DraftPreflightException('Taslak ön kontrolü tamamlanamadı; oluşturma isteği gönderilmedi.', null, null, 0, $e instanceof \Exception ? $e : null);
+            }
         }
         
         $requestPath = match ($this->documentType) {
@@ -329,37 +356,128 @@ class Gib
             DocumentType::SelfEmployedReceipt => ['EARSIV_PORTAL_SERBEST_MESLEK_MAKBUZU_OLUSTUR', 'RG_SERBEST'],
         };
 
-        $response = new Client($this->getGateway('dispatch'), 
-            $this->setParams($requestPath, $data)
-        );
-
-        if (!str_contains($response->object('data'), 'başarıyla')) {
-            throw new ApiException($response->object('data'), $data, $response);
-        }
-
-        if ($isNewDraft && $uuid = $this->resolveCreatedDraftUuid($data)) {
+        try {
+            $response = $this->request($this->getGateway('dispatch'), $this->setParams($requestPath, $data));
+            $result = $response->get('data');
+            $returnedUuid = $this->draftResponseUuid($result);
+            $success = is_string($result) && str_contains($result, 'başarıyla');
+            if (is_array($result)) {
+                foreach (['success', 'sonuc'] as $key) {
+                    if (array_key_exists($key, $result) && !in_array($result[$key], [true, 1, '1'], true)) {
+                        throw new DraftCorrelationException('GİB taslak yanıtı başarı bildirmiyor. Yeniden göndermeden önce portalı kontrol edin.', $data, $response->get());
+                    }
+                }
+                $success = ($result['success'] ?? false) === true || in_array($result['sonuc'] ?? null, [1, '1'], true);
+            }
+            if (!$success && $returnedUuid === '') {
+                throw new DraftCorrelationException('GİB taslak yanıtı doğrulanamadı. Yeniden göndermeden önce portalı kontrol edin.', $data, $response->get());
+            }
+            $uuid = $isNewDraft
+                ? $this->resolveNewDraftUuid($data, $known, $returnedUuid)
+                : ($model?->getUuid() ?: ($data['faturaUuid'] ?? $data['ettn'] ?? $data['uuid'] ?? ''));
             $this->setLastId($uuid);
-            $model?->setUuid($uuid);
+            if ($isNewDraft) $model?->setUuid($uuid);
+            return true;
+        } catch (BadResponseException $e) {
+            throw new DraftCorrelationException('GİB taslak isteğinin sonucu alınamadı. Aynı belgeyi tekrar göndermeden önce portalı kontrol edin.', null, null, 0, $e);
+        } finally {
+            if (is_resource($lock)) {
+                flock($lock, LOCK_UN);
+                fclose($lock);
+            }
         }
-        return true;
     }
 
-    /**
-     * resolveCreatedDraftUuid
-     */
-    protected function resolveCreatedDraftUuid(array $data): ?string
+    protected function draftDate(array $data): string
     {
-        $getLastDocument = $this->getLastDocument('-1 minute', $data['vknTckn'] ?? null);
+        $date = $data[$this->documentType === DocumentType::Invoice ? 'faturaTarihi' : 'tarih'] ?? '';
+        if (!is_string($date)) throw new InvalidFormatException('Tarih geçerli formatta değil.');
+        $this->parseDocumentDate($date);
+        return $date;
+    }
 
-        if (empty($getLastDocument)) {
-            throw new ApiException('Fatura GİB üzerinde oluşturuldu ancak ETTN bilgisi alınamadı.', $data);
+    protected function acquireDraftCreationLock(): mixed
+    {
+        $key = hash('sha256', $this->getGateway('dispatch') . ':' . ($this->username ?: $this->token));
+        $lock = @fopen(sys_get_temp_dir() . '/mlevent-fatura-' . $key . '.lock', 'c');
+        if ($lock === false || !flock($lock, LOCK_EX | LOCK_NB)) {
+            if (is_resource($lock)) fclose($lock);
+            throw new DraftPreflightException('Bu hesap için başka bir taslak oluşturma işlemi sürüyor.');
         }
-        
-        return match ($this->documentType) {
-            DocumentType::Invoice => $getLastDocument['faturaUuid'] ?? null,
-            DocumentType::ProducerReceipt => $getLastDocument['uuid'] ?? null,
-            DocumentType::SelfEmployedReceipt => $getLastDocument['ettn'] ?? null,
-        };
+        return $lock;
+    }
+
+    protected function draftResponseUuid(mixed $result): string
+    {
+        if (is_string($result) && Uuid::isValid(trim($result))) return trim($result);
+        if (is_array($result)) {
+            $uuids = [];
+            foreach (['ettn', 'faturaUuid', 'uuid'] as $key) {
+                if (!empty($result[$key]) && (!is_string($result[$key]) || !Uuid::isValid($result[$key]))) {
+                    throw new DraftCorrelationException('GİB taslak yanıtında geçersiz ETTN var.');
+                }
+                if (is_string($result[$key] ?? null) && Uuid::isValid($result[$key])) $uuids[strtolower($result[$key])] = true;
+            }
+            if (count($uuids) > 1) throw new DraftCorrelationException('GİB birbiriyle çelişen taslak ETTN bilgileri döndürdü.');
+            return array_key_first($uuids) ?? '';
+        }
+        return '';
+    }
+
+    protected function draftUuids(array $summaries): array
+    {
+        $uuids = [];
+        foreach ($summaries as $summary) {
+            $uuid = $summary['ettn'] ?? null;
+            if (!is_string($uuid) || !Uuid::isValid($uuid) || isset($uuids[strtolower($uuid)])) {
+                throw new ApiException('GİB taslak listesinde geçersiz veya tekrarlanan ETTN var.');
+            }
+            $uuids[strtolower($uuid)] = $summary;
+        }
+        return $uuids;
+    }
+
+    protected function resolveNewDraftUuid(array $data, array $known, string $returnedUuid): string
+    {
+        $date = $this->draftDate($data);
+        if ($returnedUuid !== '' && isset($known[strtolower($returnedUuid)])) {
+            throw new DraftCorrelationException('GİB yeni taslak için mevcut bir belgenin ETTN bilgisini döndürdü.');
+        }
+        $previous = '';
+        for ($attempt = 0; $attempt < 6; $attempt++) {
+            $this->waitForDraftVisibility($attempt);
+            try {
+                $candidates = $returnedUuid !== '' ? [$returnedUuid => []]
+                    : array_diff_key($this->draftUuids($this->listDocumentSummaries($date, $date)), $known);
+                $matches = [];
+                $unresolved = false;
+                foreach ($candidates as $uuid => $summary) {
+                    if (isset($summary['belgeTuru']) && $summary['belgeTuru'] !== $this->documentType->value) continue;
+                    try {
+                        $match = DraftMatcher::matches($this->getDocument($uuid), $data, $this->documentType, $uuid);
+                    } catch (ApiException|BadResponseException) {
+                        $match = null;
+                    }
+                    if ($match === true) $matches[] = $uuid;
+                    elseif ($match === null) $unresolved = true;
+                }
+            } catch (ApiException|BadResponseException) {
+                $previous = '';
+                continue;
+            }
+            if (count($matches) > 1) {
+                throw new DraftCorrelationException('Birden fazla yeni taslak aynı verilerle eşleşiyor. Yeniden göndermeden önce portalı kontrol edin.');
+            }
+            $candidate = !$unresolved && count($matches) === 1 ? $matches[0] : '';
+            if ($candidate !== '' && ($returnedUuid !== '' || $candidate === $previous)) return $candidate;
+            $previous = $candidate;
+        }
+        throw new DraftCorrelationException('Taslak gönderildi ancak ETTN güvenle eşleştirilemedi. Aynı belgeyi tekrar göndermeyin; portalı kontrol edin.');
+    }
+
+    protected function waitForDraftVisibility(int $attempt): void
+    {
+        if ($attempt > 0) usleep(500000);
     }
 
     /**
@@ -374,7 +492,7 @@ class Gib
             ];
         }, $this->setUuid($documents));
 
-        $response = new Client($this->getGateway('dispatch'), 
+        $response = $this->request($this->getGateway('dispatch'),
             $this->setParams(['EARSIV_PORTAL_FATURA_SIL', 'RG_TASLAKLAR'], [
                 'silinecekler' => $setToDelete, 
                 'aciklama'     => $reason,
@@ -392,18 +510,28 @@ class Gib
      */
     public function getDocument(string $uuid): array
     {
-        $requestPath = match ($this->documentType) {
-            DocumentType::Invoice             => ['EARSIV_PORTAL_FATURA_GETIR', 'RG_TASLAKLAR'],
-            DocumentType::ProducerReceipt     => ['EARSIV_PORTAL_MUSTAHSIL_GETIR', 'RG_MUSTAHSIL'],
-            DocumentType::SelfEmployedReceipt => ['EARSIV_PORTAL_SERBEST_MESLEK_GETIR', 'RG_SERBEST'],
+        $uuid = $this->setUuid($uuid);
+        $paths = match ($this->documentType) {
+            DocumentType::Invoice             => [['EARSIV_PORTAL_FATURA_GETIR', 'RG_BASITFATURA'], ['EARSIV_PORTAL_FATURA_GETIR', 'RG_TASLAKLAR']],
+            DocumentType::ProducerReceipt     => [['EARSIV_PORTAL_MUSTAHSIL_GETIR', 'RG_MUSTAHSIL']],
+            DocumentType::SelfEmployedReceipt => [['EARSIV_PORTAL_SERBEST_MESLEK_GETIR', 'RG_SERBEST']],
         };
-
-        $response = new Client($this->getGateway('dispatch'), 
-            $this->setParams($requestPath, [
-                'ettn' => $this->setUuid($uuid)
-            ])
-        );
-        return $response->get('data');
+        $failure = null;
+        foreach ($paths as $path) {
+            try {
+                $response = $this->dispatchRead($path, ['ettn' => $uuid]);
+                $document = $response->get('data');
+                if (!is_array($document) || $document === [] || array_is_list($document)) {
+                    throw new ApiException('GİB belge detayı beklenen biçimde dönmedi.', null, $response->get());
+                }
+                return $document;
+            } catch (SessionExpiredException $e) {
+                throw $e;
+            } catch (ApiException $e) {
+                $failure ??= $e;
+            }
+        }
+        throw $failure;
     }
 
     /**
@@ -434,12 +562,10 @@ class Gib
      */
     public function getHtml(string $uuid, bool $signed = true): mixed
     {
-        $response = new Client($this->getGateway('dispatch'), 
-            $this->setParams(['EARSIV_PORTAL_FATURA_GOSTER', 'RG_TASLAKLAR'], [
-                'ettn'       => $this->setUuid($uuid), 
-                'onayDurumu' => ($signed ? 'Onaylandı' : 'Onaylanmadı'),
-            ])
-        );
+        $response = $this->dispatchRead(['EARSIV_PORTAL_FATURA_GOSTER', 'RG_TASLAKLAR'], [
+            'ettn'       => $this->setUuid($uuid),
+            'onayDurumu' => ($signed ? 'Onaylandı' : 'Onaylanmadı'),
+        ]);
         return $response->get('data');
     }
     
@@ -489,7 +615,7 @@ class Gib
      */
     public function cancellationRequest(string $uuid, string $explanation): string
     {
-        $response = new Client($this->getGateway('dispatch'), 
+        $response = $this->request($this->getGateway('dispatch'),
             $this->setParams(['EARSIV_PORTAL_IPTAL_TALEBI_OLUSTUR', 'RG_TASLAKLAR'], [
                 'ettn'          => $this->setUuid($uuid), 
                 'onayDurumu'    => 'Onaylandı',
@@ -505,7 +631,7 @@ class Gib
      */
     public function objectionRequest(string $uuid, ObjectionMethod $objectionMethod, string $documentId, string $documentDate, string $explanation): string
     {
-        $response = new Client($this->getGateway('dispatch'), 
+        $response = $this->request($this->getGateway('dispatch'),
             $this->setParams(['EARSIV_PORTAL_ITIRAZ_TALEBI_OLUSTUR', 'RG_TASLAKLAR'], [
                 'ettn'                => $this->setUuid($uuid), 
                 'onayDurumu'          => 'Onaylandı',
@@ -524,16 +650,10 @@ class Gib
      */
     public function getRequests(string $startDate, string $endDate): array
     {
-        if (!FormatValidator::date($startDate) || !FormatValidator::date($endDate)) {
-            throw new InvalidFormatException('Tarih geçerli formatta değil.');
-        }
-        $response = new Client($this->getGateway('dispatch'), 
-            $this->setParams(['EARSIV_PORTAL_GELEN_IPTAL_ITIRAZ_TALEPLERINI_GETIR', 'RG_IPTALITIRAZTASLAKLAR'], [
-                'baslangic' => $startDate, 
-                'bitis'     => $endDate,
-            ])
+        return $this->listByDateRange(
+            ['EARSIV_PORTAL_GELEN_IPTAL_ITIRAZ_TALEPLERINI_GETIR', 'RG_IPTALITIRAZTASLAKLAR'],
+            $startDate, $endDate
         );
-        return $response->get('data');
     }
 
     /**
@@ -541,17 +661,15 @@ class Gib
      */
     public function getAll(string $startDate, string $endDate): array
     {
-        if (!FormatValidator::date($startDate) || !FormatValidator::date($endDate)) {
-            throw new InvalidFormatException('Tarih geçerli formatta değil.');
-        }
-        $response = new Client($this->getGateway('dispatch'), 
-            $this->setParams(['EARSIV_PORTAL_TASLAKLARI_GETIR', 'RG_TASLAKLAR'], [
-                'baslangic' => $startDate, 
-                'bitis'     => $endDate, 
-                'hangiTip'  => $this->testMode ? Type::eArsivDiger : Type::eArsivFatura,
-            ])
+        return $this->filterDocuments($this->listDocumentSummaries($startDate, $endDate));
+    }
+
+    protected function listDocumentSummaries(string $startDate, string $endDate): array
+    {
+        return $this->listByDateRange(
+            ['EARSIV_PORTAL_TASLAKLARI_GETIR', 'RG_TASLAKLAR'], $startDate, $endDate,
+            ['hangiTip' => $this->testMode ? Type::eArsivDiger : Type::eArsivFatura], true
         );
-        return $this->filterDocuments($response->get('data'));
     }
 
     /**
@@ -559,17 +677,61 @@ class Gib
      */
     public function getAllIssuedToMe(string $startDate, string $endDate, string $hourlySearch = 'NONE'): array
     {
-        if (!FormatValidator::date($startDate) || !FormatValidator::date($endDate)) {
+        return $this->filterDocuments($this->listByDateRange(
+            ['EARSIV_PORTAL_ADIMA_KESILEN_BELGELERI_GETIR', 'RG_ALICI_TASLAKLAR'], $startDate, $endDate,
+            ['hourlySearchInterval' => $hourlySearch]
+        ));
+    }
+
+    protected function listByDateRange(array $command, string $startDate, string $endDate, array $payload = [], bool $uniqueByUuid = false): array
+    {
+        $start = $this->parseDocumentDate($startDate);
+        $end = $this->parseDocumentDate($endDate);
+        if ($start > $end) {
+            throw new InvalidFormatException('Başlangıç tarihi bitiş tarihinden sonra olamaz.');
+        }
+
+        $documents = [];
+        while ($start <= $end) {
+            // GİB iki tarih arasında en fazla 7 gün kabul ediyor; iki uç da dahil.
+            $windowEnd = min($start->modify('+7 days'), $end);
+            $response = $this->dispatchRead($command, [
+                'baslangic' => $start->format('d/m/Y'),
+                'bitis' => $windowEnd->format('d/m/Y'),
+            ] + $payload);
+            $rows = $response->get('data');
+            if (!is_array($rows) || !array_is_list($rows)) {
+                throw new ApiException('GİB belge listesi beklenen biçimde dönmedi.', null, $response->get());
+            }
+            $seen = [];
+            foreach ($rows as $row) {
+                if (!is_array($row)) {
+                    throw new ApiException('GİB belge listesi geçersiz kayıt içeriyor.', null, $response->get());
+                }
+                if ($uniqueByUuid) {
+                    $uuid = $row['ettn'] ?? null;
+                    if (!is_string($uuid) || !Uuid::isValid($uuid) || isset($seen[strtolower($uuid)])) {
+                        throw new ApiException('GİB belge listesinde geçersiz veya tekrarlanan ETTN var.', null, $response->get());
+                    }
+                    $seen[strtolower($uuid)] = true;
+                    // Ayrı aralıklarda tekrar görünen belge son haliyle bir kez döner.
+                    $documents[strtolower($uuid)] = $row;
+                } else {
+                    $documents[] = $row;
+                }
+            }
+            $start = $windowEnd->modify('+1 day');
+        }
+        return array_values($documents);
+    }
+
+    protected function parseDocumentDate(string $date): \DateTimeImmutable
+    {
+        if (preg_match('/\A(\d{2})\/(\d{2})\/(\d{4})\z/', $date, $parts) !== 1
+            || !checkdate((int) $parts[2], (int) $parts[1], (int) $parts[3])) {
             throw new InvalidFormatException('Tarih geçerli formatta değil.');
         }
-        $response = new Client($this->getGateway('dispatch'), 
-            $this->setParams(['EARSIV_PORTAL_ADIMA_KESILEN_BELGELERI_GETIR', 'RG_ALICI_TASLAKLAR'], [
-                'baslangic'            => $startDate, 
-                'bitis'                => $endDate,
-                'hourlySearchInterval' => $hourlySearch,
-            ])
-        );
-        return $this->filterDocuments($response->get('data'));
+        return \DateTimeImmutable::createFromFormat('!d/m/Y', $date, new \DateTimeZone('Europe/Istanbul'));
     }
 
     /**
@@ -804,6 +966,40 @@ class Gib
         ];
     }
         
+    protected function dispatchRead(array $command, array $payload = []): Client
+    {
+        try {
+            return $this->request($this->getGateway('dispatch'), $this->setParams($command, $payload));
+        } catch (SessionExpiredException $e) {
+            if (!$this->username || !$this->password) throw $e;
+            $this->login();
+        }
+        // Yalnızca okuma tekrarlanır; parametreler yeni token ile kurulur.
+        return $this->request($this->getGateway('dispatch'), $this->setParams($command, $payload));
+    }
+
+    protected function request(string $url, ?array $parameters = null, bool $post = true, array $options = []): Client
+    {
+        if ($url === $this->getGateway('dispatch') && $this->token && !$this->portalReady) {
+            $this->bootPortalSession();
+        }
+        $base = $this->testMode ? self::API['gateways']['test'] : self::API['gateways']['prod'];
+        $options['cookies'] = $this->cookieJar ??= new CookieJar();
+        $options['headers'] = array_replace([
+            'Content-Type' => 'application/x-www-form-urlencoded; charset=UTF-8',
+            'Origin' => $base,
+            'Referer' => $base . ($this->portalReady ? '/index.jsp' : '/intragiris.html'),
+        ], $options['headers'] ?? []);
+        return new Client($url, $parameters, $post, $options);
+    }
+
+    protected function bootPortalSession(): void
+    {
+        $base = $this->testMode ? self::API['gateways']['test'] : self::API['gateways']['prod'];
+        $this->request($base . '/index.jsp', ['token' => $this->token], false, ['expect_json' => false]);
+        $this->portalReady = true;
+    }
+
     /**
      * getGateway
      */

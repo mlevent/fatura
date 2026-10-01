@@ -215,6 +215,21 @@ if ($gib->createDraft($invoice)) {
 $gib->logout();
 ```
 
+Yeni taslaklarda ETTN, oluşturma yanıtından veya işlem öncesinde bulunmayan belgelerin
+detayları karşılaştırılarak alınır. Aynı alıcının son belgesi doğrudan seçilmez.
+Alıcı, tarih, tutar ve gönderilen saat, para birimi, sipariş/not ve satır bilgileri
+eşleşmelidir. Liste üzerinden bulunan aday iki ardışık okumada doğrulanır.
+
+`DraftPreflightException`, oluşturma isteği gönderilmeden önce ön kontrolün
+başarısız olduğunu belirtir. `DraftCorrelationException` durumunda belge GİB'de
+oluşmuş olabilir; aynı isteği tekrar göndermeden önce portal üzerinden uzlaştırın.
+Başarısız yeni taslak eşleştirmesinde modelin UUID'si ve `lastId()` boş kalır.
+
+Aynı makinedeki işlemler hesap bazında dosya kilidi kullanır. Farklı sunuculardan
+veya portal üzerinden aynı hesapla eşzamanlı oluşturma yapılıyorsa ortak bir
+kilit/kuyruk uygulama tarafından sağlanmalıdır. GİB'in ETTN döndürmediği yanıtlarda
+aynı içerikli, henüz listelenmeyen dış işlemler için atomik eşleştirme garantisi yoktur.
+
 ### İade
 
 İade faturası oluşturabilmek için, **faturaTipi** `InvoiceType::Iade` gönderilmeli; iadeye konu faturalar **addReturnItem** metoduyla faturaya eklenmelidir.
@@ -619,6 +634,10 @@ if ($gib->completeSmsVerification($smsCode, $operationId, $setToSign)) {
 ## Belge Listeleme
 
 Oluşturulan taslak belgeleri, tarih aralığı belirtmek koşuluyla farklı şekillerde listeleyebilirsiniz.
+
+`getAll`, `getAllIssuedToMe` ve `getRequests`, uzun aralıkları GİB'in kabul ettiği
+en fazla 7 günlük tarih farkına sahip sorgulara böler. Filtre, sıralama ve limit
+birleştirilmiş sonuca uygulanır. Aralıklardan biri başarısızsa eksik liste dönmez.
 
 ### Düzenlenen Belgeler
 
