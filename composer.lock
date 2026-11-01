@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7f3499c3a45d8f625fe1dfd09ccaad8c",
+    "content-hash": "669640df09de5d0228270febd813c76d",
     "packages": [
         {
             "name": "brick/math",
@@ -394,23 +394,23 @@
         },
         {
             "name": "kwn/number-to-words",
-            "version": "2.12.0",
+            "version": "3.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/kwn/number-to-words.git",
-                "reference": "c4e0cea84574bc0077121ac6a2331c183d6d1cc0"
+                "reference": "d29174220281e9f80fda1e32c822cd2395f89974"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/kwn/number-to-words/zipball/c4e0cea84574bc0077121ac6a2331c183d6d1cc0",
-                "reference": "c4e0cea84574bc0077121ac6a2331c183d6d1cc0",
+                "url": "https://api.github.com/repos/kwn/number-to-words/zipball/d29174220281e9f80fda1e32c822cd2395f89974",
+                "reference": "d29174220281e9f80fda1e32c822cd2395f89974",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.4"
+                "php": ">=8.2"
             },
             "require-dev": {
-                "phpunit/phpunit": "^9.6",
+                "phpunit/phpunit": "^11.5.55",
                 "squizlabs/php_codesniffer": "^3.7.2"
             },
             "type": "library",
@@ -441,9 +441,9 @@
             ],
             "support": {
                 "issues": "https://github.com/kwn/number-to-words/issues",
-                "source": "https://github.com/kwn/number-to-words/tree/2.12.0"
+                "source": "https://github.com/kwn/number-to-words/tree/3.0.1"
             },
-            "time": "2025-07-01T20:49:04+00:00"
+            "time": "2026-07-13T19:20:14+00:00"
         },
         {
             "name": "psr/http-client",
@@ -2658,5 +2658,5 @@
         "php": "^8.1"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }
